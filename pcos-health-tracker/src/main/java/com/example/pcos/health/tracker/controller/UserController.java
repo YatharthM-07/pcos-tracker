@@ -2,8 +2,9 @@ package com.example.pcos.health.tracker.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import com.example.pcos.health.tracker.User;
+import com.example.pcos.health.tracker.entity.User;
 import com.example.pcos.health.tracker.repository.UserRepository;
+
 
 import java.util.List;
 

@@ -1,6 +1,7 @@
 package com.example.pcos.health.tracker.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import java.time.LocalDate;
 
 @Entity
@@ -12,17 +13,23 @@ public class Cycle {
 
     private LocalDate startDate;
     private LocalDate endDate;
-    private int duration; // calculated automatically later
+    private int duration;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    @JsonBackReference
+    private User user;
 
     public Cycle() {}
 
-    public Cycle(LocalDate startDate, LocalDate endDate, int duration) {
+    public Cycle(LocalDate startDate, LocalDate endDate, int duration, User user) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.duration = duration;
+        this.user = user;
     }
 
-    // Getters and Setters
+    // Getters & Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -35,13 +42,6 @@ public class Cycle {
     public int getDuration() { return duration; }
     public void setDuration(int duration) { this.duration = duration; }
 
-    @Override
-    public String toString() {
-        return "Cycle{" +
-                "id=" + id +
-                ", startDate=" + startDate +
-                ", endDate=" + endDate +
-                ", duration=" + duration +
-                '}';
-    }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
 }

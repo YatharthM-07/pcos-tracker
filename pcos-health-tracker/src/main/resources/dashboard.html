@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>PCOS Tracker Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #f9fafc; }
+        h1 { color: #5c3c92; }
+        .card { display: inline-block; margin: 20px; padding: 20px; background: white; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        canvas { max-width: 600px; margin-top: 30px; }
+    </style>
+</head>
+<body>
+<h1>PCOS Tracker Dashboard</h1>
+
+<div class="card">
+    <h2>Total Users</h2>
+    <h3 th:text="${userCount}">0</h3>
+</div>
+<div class="card">
+    <h2>Total Cycles</h2>
+    <h3 th:text="${cycleCount}">0</h3>
+</div>
+<div class="card">
+    <h2>Total Symptoms Logged</h2>
+    <h3 th:text="${symptomCount}">0</h3>
+</div>
+
+<canvas id="symptomChart"></canvas>
+
+<script>
+    const ctx = document.getElementById('symptomChart');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Fatigue', 'Acne', 'Bloating', 'Mood Swings', 'Cramps'],
+            datasets: [{
+                label: 'Symptom Frequency (Sample)',
+                data: [12, 8, 5, 7, 10],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+</script>
+
+</body>
+</html>
