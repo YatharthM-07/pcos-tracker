@@ -1,12 +1,10 @@
 package com.example.pcos.health.tracker.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
 import com.example.pcos.health.tracker.entity.User;
 import com.example.pcos.health.tracker.repository.UserRepository;
-
-
-import java.util.List;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/users")
@@ -15,14 +13,14 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
-    @PostMapping("/add")
-    public String addUser(@RequestBody User user) {
-        userRepository.save(user);
-        return "User saved successfully!";
+    @PostMapping
+    public User addUser(@Valid @RequestBody User user) {
+        return userRepository.save(user);
     }
 
-    @GetMapping("/all")
-    public List<User> getAllUsers() {
+
+    @GetMapping
+    public Iterable<User> getAllUsers() {
         return userRepository.findAll();
     }
 }

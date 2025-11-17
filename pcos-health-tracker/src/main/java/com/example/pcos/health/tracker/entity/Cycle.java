@@ -3,6 +3,8 @@ package com.example.pcos.health.tracker.entity;
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import java.time.LocalDate;
+import jakarta.validation.constraints.*;
+
 
 @Entity
 public class Cycle {
@@ -11,8 +13,13 @@ public class Cycle {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotNull(message = "Start date is required")
     private LocalDate startDate;
+
+    @NotNull(message = "End date is required")
     private LocalDate endDate;
+
+    @Min(value = 1, message = "Duration must be at least 1")
     private int duration;
 
     @ManyToOne(fetch = FetchType.LAZY)

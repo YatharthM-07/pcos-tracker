@@ -2,6 +2,8 @@ package com.example.pcos.health.tracker.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import jakarta.validation.constraints.*;
+
 
 @Entity
 public class Symptom {
@@ -10,8 +12,13 @@ public class Symptom {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Symptom name cannot be empty")
     private String symptomName;
-    private String severity; // mild, moderate, severe
+
+    @NotBlank(message = "Severity cannot be empty")
+    private String severity;
+
+    @NotNull(message = "Date is required")
     private LocalDate dateRecorded;
 
     @ManyToOne(fetch = FetchType.LAZY)

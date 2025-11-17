@@ -7,6 +7,8 @@ import com.example.pcos.health.tracker.repository.SymptomRepository;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/symptoms")
 public class SymptomController {
