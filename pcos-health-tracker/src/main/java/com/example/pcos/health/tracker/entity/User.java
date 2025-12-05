@@ -1,38 +1,31 @@
 package com.example.pcos.health.tracker.entity;
 
 import jakarta.persistence.*;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.validation.constraints.*;
-import java.util.List;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity
+@Table(name = "users")   // avoid conflict with MySQL reserved word 'user'
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Name cannot be empty")
+    @NotBlank(message = "Name is required")
     private String name;
 
-    @Email(message = "Invalid email address")
-    @NotBlank(message = "Email cannot be empty")
+    @Email(message = "Invalid email")
+    @Column(unique = true)
     private String email;
 
-    @NotBlank(message = "Password cannot be empty")
-    @Size(min = 6, message = "Password must be at least 6 characters")
+    @NotBlank(message = "Password is required")
     private String password;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference
-    private List<Cycle> cycles;
+    // Constructors
+    public User() {}
 
-    // Required default constructor
-    public User() {
-    }
-
-    // ---- Getters & Setters ----
-
+    // Getters & Setters
     public Long getId() {
         return id;
     }
@@ -63,13 +56,5 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public List<Cycle> getCycles() {
-        return cycles;
-    }
-
-    public void setCycles(List<Cycle> cycles) {
-        this.cycles = cycles;
     }
 }

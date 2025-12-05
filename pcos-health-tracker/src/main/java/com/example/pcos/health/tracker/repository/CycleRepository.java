@@ -9,4 +9,5 @@ public interface CycleRepository extends JpaRepository<Cycle, Long> {
 
     // Fetch cycles of a specific user, newest first
     List<Cycle> findByUserIdOrderByStartDateDesc(Long userId);
+    
 }

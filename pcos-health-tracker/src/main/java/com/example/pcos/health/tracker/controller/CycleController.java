@@ -60,4 +60,18 @@ public class CycleController {
             return ResponseEntity.status(500).body(Map.of("error", "Failed to save cycle: " + e.getMessage()));
         }
     }
+    @GetMapping("/user")
+    public ResponseEntity<?> getCyclesByUser(@RequestParam Long userId) {
+
+        // Validate user exists
+        if (!userRepository.existsById(userId)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "User not found for id=" + userId));
+        }
+
+        // Fetch cycles ordered by most recent first
+        var cycles = cycleRepository.findByUserIdOrderByStartDateDesc(userId);
+
+        return ResponseEntity.ok(cycles);
+    }
+
 }
