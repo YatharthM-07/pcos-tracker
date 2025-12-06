@@ -66,11 +66,22 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(@RequestHeader("Authorization") String authHeader) {
 
-        String token = authHeader.substring(7); // remove "Bearer "
+        String token = authHeader.substring(7);  // remove "Bearer "
         String email = jwtUtil.extractEmail(token);
+
         User user = userRepository.findByEmail(email);
 
-        return ResponseEntity.ok(user);
+        if (user == null) {
+            return ResponseEntity.status(404).body("User not found");
+        }
+
+        return ResponseEntity.ok(
+                new Object() {
+                    public final Long id = user.getId();
+                    public final String name = user.getName();
+                    public final String emailAddress = user.getEmail();
+                }
+        );
     }
 
 }

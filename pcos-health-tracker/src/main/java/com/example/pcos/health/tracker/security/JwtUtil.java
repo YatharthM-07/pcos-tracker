@@ -1,50 +1,61 @@
 package com.example.pcos.health.tracker.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.SecretKey;
+import java.security.Key;
 import java.util.Date;
 
 @Component
 public class JwtUtil {
 
     @Value("${app.jwt.secret}")
-    private String secretKey;
+    private String secret;
 
-    // Generate token
+    private Key getSigningKey() {
+        return Keys.hmacShaKeyFor(secret.getBytes());
+    }
+
+    // -------------------------------------------------------------
+    // 1) Generate Token
+    // -------------------------------------------------------------
     public String generateToken(String email) {
-        SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes());
-
         return Jwts.builder()
                 .setSubject(email)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 hours
-                .signWith(key, SignatureAlgorithm.HS256)
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24 hours
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // Extract email from token
+    // -------------------------------------------------------------
+    // 2) Extract Email (username) from token
+    // -------------------------------------------------------------
     public String extractEmail(String token) {
         return extractAllClaims(token).getSubject();
     }
 
-    // Validate token expiry
-    public boolean isTokenExpired(String token) {
-        return extractAllClaims(token).getExpiration().before(new Date());
-    }
-
     private Claims extractAllClaims(String token) {
-        SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes());
-
         return Jwts.parserBuilder()
-                .setSigningKey(key)
+                .setSigningKey(getSigningKey())
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
+    }
+
+    // -------------------------------------------------------------
+    // 3) Validate Token
+    // -------------------------------------------------------------
+    public boolean validateToken(String token, org.springframework.security.core.userdetails.UserDetails userDetails) {
+        try {
+            String email = extractEmail(token);
+            boolean notExpired = extractAllClaims(token).getExpiration().after(new Date());
+            return (email.equals(userDetails.getUsername()) && notExpired);
+        } catch (Exception e) {
+            System.out.println("❌ Token validation failed: " + e.getMessage());
+            return false;
+        }
     }
 }

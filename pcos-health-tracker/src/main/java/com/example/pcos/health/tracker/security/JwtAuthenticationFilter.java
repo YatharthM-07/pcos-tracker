@@ -30,48 +30,56 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String path = request.getRequestURI();
+        System.out.println("----- FILTER CALLED for " + path + " -----");
 
-        // Skip JWT validation for /auth routes (login, signup)
+        // 🔥 Skip JWT for authentication endpoints
         if (path.startsWith("/auth")) {
+            System.out.println("Skipping JWT for public auth route.");
             filterChain.doFilter(request, response);
             return;
         }
 
-        //  Read Authorization header
+        // Read Authorization header
         String authHeader = request.getHeader("Authorization");
+        System.out.println("Authorization header = " + authHeader);
+
         String token = null;
         String email = null;
 
-        //  Check if header starts with "Bearer "
+        // Extract Bearer token
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
+            System.out.println("Extracted Token = " + token);
 
             try {
                 email = jwtUtil.extractEmail(token);
+                System.out.println("Email extracted = " + email);
             } catch (Exception e) {
-                System.out.println("Invalid JWT Token: " + e.getMessage());
+                System.out.println("❌ Token extraction failed: " + e.getMessage());
             }
         }
 
-        //  If token contains email & user not authenticated
+        // If token email extracted + no existing authentication → authenticate the user
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            System.out.println("Loading user details for: " + email);
 
             UserDetails userDetails = userDetailsService.loadUserByUsername(email);
 
-            // Validate token
-            if (!jwtUtil.isTokenExpired(token)) {
+            if (jwtUtil.validateToken(token, userDetails)) {
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities()
+                                userDetails, null, userDetails.getAuthorities()
                         );
 
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+
+                System.out.println("✔ JWT validated. User authenticated: " + email);
+            } else {
+                System.out.println("❌ JWT validation FAILED.");
             }
         }
 
-        // Continue filter chain
+        // Continue the filter chain
         filterChain.doFilter(request, response);
     }
 }

@@ -3,17 +3,14 @@ package com.example.pcos.health.tracker.controller;
 import com.example.pcos.health.tracker.entity.DailySymptom;
 import com.example.pcos.health.tracker.entity.User;
 import com.example.pcos.health.tracker.repository.DailySymptomRepository;
-import com.example.pcos.health.tracker.repository.UserRepository;
+import com.example.pcos.health.tracker.security.AuthContext;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/daily-log")
@@ -23,11 +20,13 @@ public class DailyLogController {
     private DailySymptomRepository dailySymptomRepository;
 
     @Autowired
-    private UserRepository userRepository; // ensure you have this
+    private AuthContext authContext;
 
-    public static class DailySymptomPayload {
-        public Long userId;
-        public String date; // accept YYYY-MM-DD
+    // ================================================================
+    // Payload Class
+    // ================================================================
+    public static class DailyLogPayload {
+        public String date;
         public Integer cramps;
         public Integer acne;
         public Integer mood;
@@ -36,62 +35,99 @@ public class DailyLogController {
         public Integer headache;
     }
 
+    // ================================================================
+    // 1️⃣ ADD OR UPDATE DAILY LOG
+    // ================================================================
     @PostMapping("/add")
-    public ResponseEntity<?> addOrUpdateDailyLog(@RequestBody DailySymptomPayload payload) {
-        // Basic payload checks
-        if (payload == null || payload.userId == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "userId is required"));
-        }
+    public ResponseEntity<?> addDailyLog(@RequestBody DailyLogPayload payload) {
 
-        LocalDate localDate;
-        try {
-            if (payload.date == null || payload.date.isBlank()) {
-                localDate = LocalDate.now(); // default to today
-            } else {
-                localDate = LocalDate.parse(payload.date); // expects YYYY-MM-DD
-            }
-        } catch (DateTimeParseException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Invalid date format. Use YYYY-MM-DD"));
-        }
+        User currentUser = authContext.getCurrentUser();
 
-        // Check user exists (avoid FK constraint errors)
-        Optional<User> maybeUser = userRepository.findById(payload.userId);
-        if (maybeUser.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "User not found for id=" + payload.userId));
-        }
-        User user = maybeUser.get();
+        LocalDate logDate = (payload.date != null && !payload.date.isBlank())
+                ? LocalDate.parse(payload.date)
+                : LocalDate.now();
 
-        // Fetch existing log for this user+date (upsert logic)
-        DailySymptom existing = dailySymptomRepository.findByUserIdAndDate(payload.userId, localDate);
-        DailySymptom log;
-        if (existing != null) {
-            log = existing;
-        } else {
+        DailySymptom log = dailySymptomRepository
+                .findByUserIdAndDate(currentUser.getId(), logDate);
+
+        if (log == null) {
             log = new DailySymptom();
-            log.setDate(localDate);
-            log.setUser(user);
+            log.setUser(currentUser);
+            log.setDate(logDate);
         }
 
-        // Set values with null-checks; repository/entity will clamp 0-10
-        if (payload.cramps != null) log.setCramps(payload.cramps);
-        if (payload.acne != null) log.setAcne(payload.acne);
-        if (payload.mood != null) log.setMood(payload.mood);
-        if (payload.bloating != null) log.setBloating(payload.bloating);
-        if (payload.fatigue != null) log.setFatigue(payload.fatigue);
-        if (payload.headache != null) log.setHeadache(payload.headache);
+        if (payload.cramps != null)     log.setCramps(payload.cramps);
+        if (payload.acne != null)       log.setAcne(payload.acne);
+        if (payload.mood != null)       log.setMood(payload.mood);
+        if (payload.bloating != null)   log.setBloating(payload.bloating);
+        if (payload.fatigue != null)    log.setFatigue(payload.fatigue);
+        if (payload.headache != null)   log.setHeadache(payload.headache);
 
+        dailySymptomRepository.save(log);
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Daily log saved successfully",
+                "date", logDate.toString()
+        ));
+    }
+
+    // ================================================================
+    // 2️⃣ GET TODAY'S LOG
+    // ================================================================
+    @GetMapping("/today")
+    public ResponseEntity<?> getTodayLog() {
+
+        User currentUser = authContext.getCurrentUser();
+        LocalDate today = LocalDate.now();
+
+        DailySymptom log = dailySymptomRepository
+                .findByUserIdAndDate(currentUser.getId(), today);
+
+        if (log == null) {
+            return ResponseEntity.ok(Map.of("message", "No log recorded for today"));
+        }
+
+        return ResponseEntity.ok(log);
+    }
+
+    // ================================================================
+    // 3️⃣ GET LOG FOR SPECIFIC DATE
+    // ================================================================
+    @GetMapping("/by-date")
+    public ResponseEntity<?> getLogByDate(@RequestParam String date) {
+
+        User currentUser = authContext.getCurrentUser();
+
+        LocalDate parsedDate;
         try {
-            DailySymptom saved = dailySymptomRepository.save(log);
-            return ResponseEntity.ok(Map.of(
-                    "message", "Daily log saved",
-                    "id", saved.getId(),
-                    "date", saved.getDate().toString()
+            parsedDate = LocalDate.parse(date);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Invalid date format. Use YYYY-MM-DD"
             ));
-        } catch (DataIntegrityViolationException dive) {
-            // likely FK violation or constraint
-            return ResponseEntity.status(500).body(Map.of("error", "Database error: " + dive.getRootCause().getMessage()));
-        } catch (Exception ex) {
-            return ResponseEntity.status(500).body(Map.of("error", "Unexpected error: " + ex.getMessage()));
         }
+
+        DailySymptom log = dailySymptomRepository
+                .findByUserIdAndDate(currentUser.getId(), parsedDate);
+
+        if (log == null) {
+            return ResponseEntity.ok(Map.of("message", "No log found for this date"));
+        }
+
+        return ResponseEntity.ok(log);
+    }
+
+    // ================================================================
+    // 4️⃣ GET ALL DAILY LOGS OF USER
+    // ================================================================
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllLogs() {
+
+        User currentUser = authContext.getCurrentUser();
+
+        List<DailySymptom> logs =
+                dailySymptomRepository.findByUserIdOrderByDateDesc(currentUser.getId());
+
+        return ResponseEntity.ok(logs);
     }
 }
