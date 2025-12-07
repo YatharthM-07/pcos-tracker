@@ -4,6 +4,8 @@ import com.example.pcos.health.tracker.entity.DailySymptom;
 import com.example.pcos.health.tracker.entity.User;
 import com.example.pcos.health.tracker.repository.DailySymptomRepository;
 import com.example.pcos.health.tracker.security.AuthContext;
+import com.example.pcos.health.tracker.service.AIWellnessService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,9 +24,12 @@ public class DailyLogController {
     @Autowired
     private AuthContext authContext;
 
-    // ================================================================
-    // Payload Class
-    // ================================================================
+    @Autowired
+    private AIWellnessService aiWellnessService;
+
+    // -----------------------------------------------------------
+    // Payload
+    // -----------------------------------------------------------
     public static class DailyLogPayload {
         public String date;
         public Integer cramps;
@@ -35,9 +40,9 @@ public class DailyLogController {
         public Integer headache;
     }
 
-    // ================================================================
-    // 1️⃣ ADD OR UPDATE DAILY LOG
-    // ================================================================
+    // -----------------------------------------------------------
+    // 1️⃣ ADD OR UPDATE LOG + WELLNESS AI
+    // -----------------------------------------------------------
     @PostMapping("/add")
     public ResponseEntity<?> addDailyLog(@RequestBody DailyLogPayload payload) {
 
@@ -56,24 +61,28 @@ public class DailyLogController {
             log.setDate(logDate);
         }
 
-        if (payload.cramps != null)     log.setCramps(payload.cramps);
-        if (payload.acne != null)       log.setAcne(payload.acne);
-        if (payload.mood != null)       log.setMood(payload.mood);
-        if (payload.bloating != null)   log.setBloating(payload.bloating);
-        if (payload.fatigue != null)    log.setFatigue(payload.fatigue);
-        if (payload.headache != null)   log.setHeadache(payload.headache);
+        if (payload.cramps != null) log.setCramps(payload.cramps);
+        if (payload.acne != null) log.setAcne(payload.acne);
+        if (payload.mood != null) log.setMood(payload.mood);
+        if (payload.bloating != null) log.setBloating(payload.bloating);
+        if (payload.fatigue != null) log.setFatigue(payload.fatigue);
+        if (payload.headache != null) log.setHeadache(payload.headache);
 
         dailySymptomRepository.save(log);
 
+        // ⭐ Gemini Wellness AI
+        String aiMessage = aiWellnessService.generateWellnessMessage(currentUser.getId());
+
         return ResponseEntity.ok(Map.of(
                 "message", "Daily log saved successfully",
-                "date", logDate.toString()
+                "date", logDate.toString(),
+                "wellnessMessage", aiMessage
         ));
     }
 
-    // ================================================================
-    // 2️⃣ GET TODAY'S LOG
-    // ================================================================
+    // -----------------------------------------------------------
+    // 2️⃣ Today's log
+    // -----------------------------------------------------------
     @GetMapping("/today")
     public ResponseEntity<?> getTodayLog() {
 
@@ -90,9 +99,9 @@ public class DailyLogController {
         return ResponseEntity.ok(log);
     }
 
-    // ================================================================
-    // 3️⃣ GET LOG FOR SPECIFIC DATE
-    // ================================================================
+    // -----------------------------------------------------------
+    // 3️⃣ Log by date
+    // -----------------------------------------------------------
     @GetMapping("/by-date")
     public ResponseEntity<?> getLogByDate(@RequestParam String date) {
 
@@ -117,9 +126,9 @@ public class DailyLogController {
         return ResponseEntity.ok(log);
     }
 
-    // ================================================================
-    // 4️⃣ GET ALL DAILY LOGS OF USER
-    // ================================================================
+    // -----------------------------------------------------------
+    // 4️⃣ All logs
+    // -----------------------------------------------------------
     @GetMapping("/all")
     public ResponseEntity<?> getAllLogs() {
 
