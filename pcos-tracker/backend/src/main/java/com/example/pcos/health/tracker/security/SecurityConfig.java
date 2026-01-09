@@ -35,37 +35,48 @@ public class SecurityConfig {
 
         http
                 .csrf(csrf -> csrf.disable())
+                .sessionManagement(sm ->
+                        sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
                 .authorizeHttpRequests(auth -> auth
 
-                        // 🔓 Public pages
+                        // ✅ PUBLIC HTML PAGES
                         .requestMatchers(
                                 "/",
                                 "/index",
                                 "/login",
-                                "/register"
+                                "/register",
+                                "/user-dashboard"
                         ).permitAll()
 
-                        // 🔓 Static resources
+                        // ✅ STATIC RESOURCES
                         .requestMatchers(
                                 "/css/**",
                                 "/js/**",
                                 "/images/**"
                         ).permitAll()
 
-                        // 🔓 Auth APIs
+                        // ✅ AUTH APIs
                         .requestMatchers("/auth/**").permitAll()
 
-                        // 🔒 Everything else requires JWT
+                        // 🔒 PROTECTED APIs (JWT REQUIRED)
+                        .requestMatchers(
+                                "/analytics/**",
+                                "/cycles/**",
+                                "/daily-log/**",
+                                "/food/**",
+                                "/reports/**"
+                        ).authenticated()
+
+                        // 🔒 EVERYTHING ELSE
                         .anyRequest().authenticated()
-                )
-                .sessionManagement(sm ->
-                        sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 );
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
 
 
 }

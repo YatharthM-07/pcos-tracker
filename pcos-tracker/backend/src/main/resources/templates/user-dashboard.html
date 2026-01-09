@@ -142,22 +142,42 @@
         .greet p{color:var(--muted)}
 
         .calendar-card{
-          background:#fff;border-radius:18px;padding:14px;
-          box-shadow:0 12px 32px rgba(0,0,0,0.06)
-        }
+  background:#fff;
+  border-radius:18px;
+  padding:14px;
+  box-shadow:0 12px 32px rgba(0,0,0,0.06);
+}
+
 
         .mini-calendar{background:#fff;border-radius:12px;padding:12px;border:1px solid #ffdbe6}
         .cal-head{display:flex;justify-content:space-between;font-weight:700}
         .cal-week{display:flex;justify-content:space-between;margin-top:10px;color:#777}
         .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:12px}
 
-        /* NON-CLICKABLE CELLS */
-        .cal-cell{
-          height:58px;border-radius:10px;display:flex;align-items:center;justify-content:center;
-          font-weight:700;background:#fff;
-          pointer-events:none !important; /* disables click */
-          cursor: default !important;
-        }
+       /*call cells*/
+                    .cal-cell{
+              height:58px;
+              border-radius:10px;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              font-weight:700;
+              background:#fff;
+              cursor:pointer;
+              transition:background 0.2s ease;
+            }
+            /* Today + selected period */
+            .cal-cell.today.period{
+              background:linear-gradient(180deg,#ffd6e0,#ffb6be) !important;
+              border:none;
+              color:#6b0d12;
+            }
+
+
+.cal-cell:hover{
+  background:#fff4f6;
+}
+
         .cal-cell.disabled{opacity:.35}
         .cal-cell.period{
           background:linear-gradient(180deg,#ffd6e0,#ffb6be);
@@ -335,8 +355,8 @@
     <div class="container">
 
         <!-- Logo → Dashboard -->
-        <a class="navbar-brand" href="user-dashboard.html">
-            <img src="../static/images/pcos_logo.png" alt="Maitri logo"/>
+        <a class="navbar-brand" href="/user-dashboard">
+        <img src="/images/pcos_logo.png" alt="Maitri logo"/>
             <span class="brand-name">
                 Ma<span class="i-grad">i</span>tr<span class="i-grad">i</span>
             </span>
@@ -392,7 +412,7 @@
         <!-- LEFT CALENDAR -->
         <div class="area-calendar">
             <div class="greet">
-                <h2>Hi, User 🌸</h2>
+                <h2 id="username">Hi, User 🌸</h2>
                 <p>You deserve gentleness — welcome back.</p>
             </div>
 
@@ -410,6 +430,12 @@
                     <div id="calendarGrid" class="cal-grid"></div>
 
                 </div>
+                <div class="mt-3 text-center">
+                    <button id="savePeriodBtn" class="btn btn-pink px-4" disabled>
+                        Save Period
+                    </button>
+                </div>
+
 
                 <div class="summary-row">
                     <div class="summary-card c1">Period Cycle Length<br><span style="color:var(--muted)">30 days — Normal</span></div>
@@ -554,106 +580,10 @@
     </div>
 </div>
 
-<script>
-    document.getElementById("todayLabel").textContent =
-      new Date().toLocaleString("default",{weekday:"short",month:"short",day:"numeric"});
-
-    /* SLIDER OUTPUT */
-    ["cramps","acne","mood","bloating","fatigue","headache"].forEach(id=>{
-      const s=document.getElementById(id);
-      const v=document.getElementById("val-"+id);
-      s.addEventListener("input",()=>v.textContent=s.value);
-    });
-
-    /* AUTO CLOSE ON SAVE */
-    document.getElementById("saveDailyLog").addEventListener("click",()=>{
-      const btn=document.getElementById("saveDailyLog");
-      btn.textContent="Saved ✓";
-      btn.style.background="#2ecc71";
-      setTimeout(()=>{
-        btn.textContent="Save";
-        btn.style.background="";
-        bootstrap.Modal.getInstance(document.getElementById("dailyLogModal")).hide();
-      },900);
-    });
-
-    /* NON-CLICKABLE CALENDAR — just dynamic display */
-    const pad=n=>String(n).padStart(2,"0");
-    const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-
-    let view=new Date();
-    const calGrid=document.getElementById("calendarGrid");
-    const monthLbl=document.getElementById("monthLabel");
-
-    const periodRanges=[{start:"2025-11-02",end:"2025-11-06"}];
-
-    function inPeriod(date){
-      for(const r of periodRanges){
-        if(date>=r.start && date<=r.end) return true;
-      }
-      return false;
-    }
-
-    function renderCal(){
-      const y=view.getFullYear(),m=view.getMonth();
-      monthLbl.textContent=view.toLocaleString("default",{month:"long",year:"numeric"});
-
-      calGrid.innerHTML="";
-      const first=new Date(y,m,1).getDay();
-      const days=new Date(y,m+1,0).getDate();
-      const prevDays=new Date(y,m,0).getDate();
-
-      const todayKey=ymd(new Date());
-
-      for(let i=0;i<42;i++){
-        const cell=document.createElement("div");
-        cell.className="cal-cell";
-
-        if(i<first){
-          cell.textContent=prevDays-(first-1-i);
-          cell.classList.add("disabled");
-        } else if(i<first+days){
-          const d=i-first+1;
-          const dateKey=`${y}-${pad(m+1)}-${pad(d)}`;
-          cell.textContent=d;
-
-          if(inPeriod(dateKey)) cell.classList.add("period");
-          if(dateKey===todayKey) cell.classList.add("today");
-
-        } else {
-          cell.textContent=i-(first+days)+1;
-          cell.classList.add("disabled");
-        }
-
-        calGrid.appendChild(cell);
-      }
-    }
-
-    document.getElementById("prevBtn").onclick=()=>{view=new Date(view.getFullYear(),view.getMonth()-1,1);renderCal();}
-    document.getElementById("nextBtn").onclick=()=>{view=new Date(view.getFullYear(),view.getMonth()+1,1);renderCal();}
-
-    renderCal();
-
-    function toggleDashboardAI(){
-  const popup = document.getElementById("dashboardAIPopup");
-  popup.style.display = popup.style.display === "block" ? "none" : "block";
-}
-
-function generateDashboardAI(){
-  const responseBox = document.getElementById("dashboardAIResponse");
-
-  responseBox.innerHTML = "Maitri AI is reviewing your health patterns… 💭";
-
-  // MOCK SUMMARY — backend later
-  setTimeout(() => {
-    responseBox.innerHTML =
-      "Your recent cycles show improving regularity, and while some symptoms like fatigue appear occasionally, your overall pattern suggests positive progress. Remember to stay hydrated, rest when needed, and be kind to yourself 🌷";
-  }, 1400);
-}
-
-</script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/dashboard.js"></script>
+
 
 <!-- FLOATING DASHBOARD AI BUTTON -->
 <div id="dashboardAIFab" class="food-ai-fab" onclick="toggleDashboardAI()">
@@ -678,6 +608,23 @@ function generateDashboardAI(){
 
         <div id="dashboardAIResponse" class="food-ai-response mt-3"></div>
     </div>
+</div>
+<div id="toast"
+     style="
+       position: fixed;
+       bottom: 30px;
+       left: 50%;
+       transform: translateX(-50%);
+       background: #2ecc71;
+       color: white;
+       padding: 12px 20px;
+       border-radius: 12px;
+       font-weight: 600;
+       box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+       display: none;
+       z-index: 5000;
+     ">
+    Period saved successfully 🌸
 </div>
 
 </body>

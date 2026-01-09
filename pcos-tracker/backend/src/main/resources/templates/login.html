@@ -92,7 +92,7 @@
     <h4 class="text-center mt-2 mb-4">Welcome Back</h4>
 
     <!-- LOGIN FORM -->
-    <form onsubmit="handleLogin(event)">
+    <form>
 
         <label for="loginEmail" class="form-label">Email</label>
         <input type="email"
@@ -126,56 +126,7 @@
     </div>
 </div>
 
-<script>
-    function hideLoginError() {
-        document.getElementById("loginError").style.display = "none";
-    }
-
-    function toggleLoginPassword(event) {
-        const pwd = document.getElementById("loginPassword");
-        const icon = event.target;
-
-        if (pwd.type === "password") {
-            pwd.type = "text";
-            icon.classList.replace("fa-eye", "fa-eye-slash");
-        } else {
-            pwd.type = "password";
-            icon.classList.replace("fa-eye-slash", "fa-eye");
-        }
-    }
-
-    function handleLogin(event) {
-        event.preventDefault();
-
-        const email = document.getElementById("loginEmail").value.trim();
-        const password = document.getElementById("loginPassword").value.trim();
-        const error = document.getElementById("loginError");
-
-        if (!email || !password) {
-            error.innerText = "Please enter email and password.";
-            error.style.display = "block";
-            return;
-        }
-
-        fetch("/auth/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password })
-        })
-        .then(res => {
-            if (!res.ok) throw new Error("Invalid credentials");
-            return res.json();
-        })
-        .then(data => {
-            localStorage.setItem("token", data.token);
-            window.location.href = "/user-dashboard";
-        })
-        .catch(err => {
-            error.innerText = err.message;
-            error.style.display = "block";
-        });
-    }
-</script>
+<script src="/js/login.js"></script>
 
 </body>
 </html>
