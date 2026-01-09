@@ -1,18 +1,9 @@
 package com.example.pcos.health.tracker.dto;
 
-public class SignupRequest {
+public class LoginRequest {
 
-    private String name;
     private String email;
     private String password;
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
 
     public String getEmail() {
         return email;
@@ -22,7 +13,7 @@ public class SignupRequest {
         this.email = email;
     }
 
-    public String getPassword() {
+    public java.lang.CharSequence getPassword() {
         return password;
     }
 

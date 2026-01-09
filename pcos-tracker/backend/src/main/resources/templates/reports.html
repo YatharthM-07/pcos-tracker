@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Maitri — Medical Reports</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+
+    <!-- Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+    <style>
+        :root {
+          --pink:#F37A7A;
+          --softA:#FFE6EC;
+          --softB:#ECE9FF;
+          --muted:#6f6f6f;
+          --nav-h:76px;
+        }
+
+        body{
+          margin:0;
+          padding-top:var(--nav-h);
+          background:linear-gradient(135deg,var(--softA),var(--softB));
+          font-family:'Poppins',sans-serif;
+        }
+
+        /* NAVBAR */
+        .navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--nav-h);
+  background: #fff;
+  z-index: 1200;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+.navbar .container {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.navbar-brand img {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.brand-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.brand-name .i-grad {
+  color: var(--pink);
+}
+
+.nav-icons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.icon-btn {
+  background: transparent;
+  border: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #444;
+  font-weight: 600;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.icon-btn:hover {
+  background: #fff4f6;
+  color: var(--pink);
+}
+
+.logout {
+  background: var(--pink);
+  color: #fff;
+  border: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+        /* MAIN */
+        .main{
+          max-width:900px;
+          margin:0 auto;
+          padding:30px 20px;
+        }
+
+        /* GLASS CARD */
+        .card-custom{
+          background:rgba(255,255,255,0.65);
+          border-radius:20px;
+          padding:28px;
+          margin-bottom:26px;
+          box-shadow:0 12px 30px rgba(0,0,0,0.08);
+          backdrop-filter:blur(15px);
+        }
+
+        /* DRAG & DROP UPLOAD BOX */
+        .upload-box{
+          border:2px dashed #f7b3c0;
+          border-radius:18px;
+          padding:36px;
+          text-align:center;
+          background:rgba(255,255,255,0.5);
+          transition:.3s;
+          cursor:pointer;
+        }
+        .upload-box.dragover{
+          background:#ffeaf0;
+          border-color:var(--pink);
+          transform:scale(1.02);
+        }
+        .upload-box i{
+          font-size:42px;
+          color:var(--pink);
+        }
+        .upload-hint{
+          font-size:0.9rem;
+          color:var(--muted);
+        }
+
+        /* PROGRESS BAR */
+        .progress-wrapper{
+          margin-top:18px;
+          display:none;
+        }
+        .progress{
+          height:10px;
+          border-radius:20px;
+          overflow:hidden;
+        }
+        .progress-bar{
+          background:var(--pink);
+        }
+
+        /* REPORT LIST */
+        .report-item{
+          background:white;
+          border-radius:16px;
+          padding:16px;
+          display:flex;justify-content:space-between;align-items:center;
+          box-shadow:0 6px 18px rgba(0,0,0,0.06);
+          margin-bottom:14px;
+          transition:.2s;
+        }
+        .report-item:hover{
+          transform:translateY(-3px);
+          box-shadow:0 12px 28px rgba(0,0,0,0.1);
+        }
+        .report-info{
+          display:flex;align-items:center;gap:16px;
+        }
+        .report-icon{
+          background:#fff3f5;
+          padding:16px;
+          border-radius:12px;
+          font-size:22px;
+          color:var(--pink);
+        }
+        .action-btn{
+          border:0;background:white;padding:8px 12px;border-radius:10px;
+          box-shadow:0 3px 10px rgba(0,0,0,0.06);
+          transition:.2s;
+        }
+        .action-btn:hover{
+          background:#ffe5ec;
+          color:var(--pink);
+        }
+
+        /* TOAST MESSAGE */
+        .toast-msg{
+          position:fixed;
+          bottom:20px; right:20px;
+          background:#ffe6ea;
+          padding:14px 22px;
+          border-radius:12px;
+          color:#a31230;
+          font-weight:600;
+          box-shadow:0 6px 20px rgba(0,0,0,0.15);
+          animation:fadeInOut 3s forwards;
+        }
+        @keyframes fadeInOut{
+          0%{opacity:0; transform:translateY(20px);}
+          10%{opacity:1; transform:translateY(0);}
+          90%{opacity:1;}
+          100%{opacity:0; transform:translateY(20px);}
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-md">
+    <div class="container">
+
+        <!-- LOGO NOW TAKES USER TO DASHBOARD -->
+        <a class="navbar-brand" href="user-dashboard.html">
+            <img src="../static/images/pcos_logo.png" alt="Maitri logo"/>
+            <span class="brand-name">Ma<span class="i-grad">i</span>tr<span class="i-grad">i</span></span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end" id="topNav">
+            <div class="nav-icons">
+                <button class="icon-btn" onclick="window.location.href='cycle-tracker.html'">
+                    <i class="fa-solid fa-droplet"></i>
+                    <span class="d-none d-md-inline"> Cycle</span>
+                </button>
+                <button class="icon-btn" onclick="window.location.href='symptom-tracker.html'">
+                    <i class="fa-solid fa-heart-pulse"></i>
+                    <span class="d-none d-md-inline"> Symptom</span>
+                </button>
+                <button class="icon-btn" onclick="window.location.href='nutrition.html'">
+                    <i class="fa-solid fa-utensils"></i>
+                    <span class="d-none d-md-inline"> Nutrition</span>
+                </button>
+                <button class="icon-btn" onclick="window.location.href='reports.html'">
+                    <i class="fa-solid fa-file-medical"></i>
+                    <span class="d-none d-md-inline"> Reports</span>
+                </button>
+                <button class="logout" onclick="window.location.href='login.html'">
+                    Logout
+                </button>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+
+    <!-- Upload Section -->
+    <div class="card-custom">
+        <h3 class="fw-bold">Medical Reports</h3>
+        <p style="color:var(--muted)">Upload, manage, and access your reports securely.</p>
+
+        <div id="uploadBox" class="upload-box mt-4">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <div class="mt-2 fw-semibold">Drag & drop your file here</div>
+            <div class="upload-hint">or click to browse files (PDF, JPG, PNG)</div>
+        </div>
+
+        <input
+                type="file"
+                id="reportFile"
+                class="d-none"
+                accept=".pdf,.jpg,.jpeg,.png"
+        />
+
+        <!-- Progress Bar -->
+        <div class="progress-wrapper" id="progressWrapper">
+            <div class="progress">
+                <div
+                        class="progress-bar"
+                        id="uploadProgress"
+                        role="progressbar"
+                        style="width: 0%;"
+                ></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports List -->
+    <div class="card-custom">
+        <h5 class="fw-bold mb-3">Your Uploaded Reports</h5>
+        <div id="reportsList"></div>
+    </div>
+
+</div>
+
+<script>
+    // -------------------------------
+    //  STATE
+    // -------------------------------
+    let reports = [];
+
+    // -------------------------------
+    //  UI HELPERS
+    // -------------------------------
+    function showToast(msg){
+      const box = document.createElement("div");
+      box.className = "toast-msg";
+      box.textContent = msg;
+      document.body.appendChild(box);
+      setTimeout(() => box.remove(), 3000);
+    }
+
+    function renderReports(){
+      const container = document.getElementById("reportsList");
+      container.innerHTML = "";
+
+      if(!reports.length){
+        container.innerHTML = `<p style="color:var(--muted);">No reports uploaded yet.</p>`;
+        return;
+      }
+
+      reports.forEach(r => {
+        container.innerHTML += `
+          <div class="report-item">
+            <div class="report-info">
+              <div class="report-icon"><i class="fa-solid fa-file-medical"></i></div>
+              <div>
+                <div class="fw-semibold">${r.fileName}</div>
+                <div class="report-date">Uploaded on ${r.date}</div>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:10px;">
+              <button class="action-btn" onclick="downloadReport('${r.fileName}')">
+                <i class="fa-solid fa-download"></i>
+              </button>
+              <button class="action-btn" onclick="deleteReport('${r.fileName}')">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    // -------------------------------
+    //  UPLOAD LOGIC
+    // -------------------------------
+    const uploadBox = document.getElementById("uploadBox");
+    const fileInput = document.getElementById("reportFile");
+
+    uploadBox.onclick = () => fileInput.click();
+
+    uploadBox.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      uploadBox.classList.add("dragover");
+    });
+    uploadBox.addEventListener("dragleave", () => {
+      uploadBox.classList.remove("dragover");
+    });
+    uploadBox.addEventListener("drop", (e) => {
+      e.preventDefault();
+      uploadBox.classList.remove("dragover");
+
+      const file = e.dataTransfer.files[0];
+      handleFile(file);
+    });
+
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files[0];
+      handleFile(file);
+    });
+
+    function handleFile(file){
+      if(!file) return;
+
+      const allowed = ["application/pdf", "image/jpeg", "image/png"];
+      if(!allowed.includes(file.type)){
+        showToast("❌ Only PDF, JPG, PNG allowed!");
+        fileInput.value = "";
+        return;
+      }
+
+      simulateUpload(file);
+    }
+
+    // -------------------------------
+    //  SIMULATED UPLOAD + PROGRESS
+    // -------------------------------
+    function simulateUpload(file){
+      const progressWrapper = document.getElementById("progressWrapper");
+      const progressBar = document.getElementById("uploadProgress");
+
+      progressWrapper.style.display = "block";
+      progressBar.style.width = "0%";
+
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 10;
+        progressBar.style.width = progress + "%";
+
+        if(progress >= 100){
+          clearInterval(interval);
+          progressWrapper.style.display = "none";
+
+          // Save mock report
+          reports.unshift({
+            fileName: file.name,
+            date: new Date().toLocaleDateString()
+          });
+
+          renderReports();
+          showToast("✔ Report uploaded successfully!");
+        }
+      }, 150);
+
+      fileInput.value = "";
+
+      // Backend real upload:
+      /*
+      const formData = new FormData();
+      formData.append("file", file);
+
+      fetch("/reports/upload", {
+        method:"POST",
+        body:formData
+      })
+      .then(() => { loadReports(); })
+      */
+    }
+
+    // -------------------------------
+    //  ACTIONS (download / delete)
+    // -------------------------------
+    function downloadReport(name){
+      showToast("Downloading: " + name);
+      // Real:
+      // window.location.href = `/reports/download/${name}`;
+    }
+
+    function deleteReport(name){
+      reports = reports.filter(r => r.fileName !== name);
+      renderReports();
+      showToast("🗑 Report deleted");
+      // Real:
+      // fetch(`/reports/delete/${name}`, { method:"DELETE" });
+    }
+
+    // INIT
+    renderReports();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

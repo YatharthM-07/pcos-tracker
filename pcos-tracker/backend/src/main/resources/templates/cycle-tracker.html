@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Maitri — Cycle Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+    <style>
+        :root{
+          --pink:#F37A7A;
+          --softA:#ffd6e0;
+          --softB:#e9e8ff;
+          --muted:#6f6f6f;
+          --nav-h:76px;
+          --radius:16px;
+          --cal-w:560px;
+        }
+
+        /* GLOBAL */
+        body{
+          margin:0;
+          padding-top:var(--nav-h);
+          background:linear-gradient(120deg,var(--softA),var(--softB));
+          font-family:Poppins,sans-serif;
+        }
+
+        /* NAVBAR — SAME AS DASHBOARD */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--nav-h);
+  background: #fff;
+  z-index: 1200;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+.navbar .container {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.navbar-brand img {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.brand-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.brand-name .i-grad {
+  color: var(--pink);
+}
+
+.nav-icons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.icon-btn {
+  background: transparent;
+  border: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #444;
+  font-weight: 600;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.icon-btn:hover {
+  background: #fff4f6;
+  color: var(--pink);
+}
+
+.logout {
+  background: var(--pink);
+  color: #fff;
+  border: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+        /* LAYOUT */
+        .container-main{
+          max-width:1280px;
+          margin:0 auto;
+          padding:26px 20px;
+        }
+
+        .grid{
+          display:grid;
+          grid-template-columns: var(--cal-w) 1fr;
+          gap:32px;
+        }
+
+        @media(max-width:1070px){
+          .grid{ grid-template-columns:1fr; }
+        }
+
+        /* CALENDAR */
+        .card{
+          background:white;
+          border-radius:var(--radius);
+          padding:18px;
+          box-shadow:0 10px 30px rgba(0,0,0,0.08);
+        }
+
+        .cal-head {
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          padding:8px 4px;
+          font-weight:700;
+        }
+
+        .cal-week {
+          display:grid;
+          grid-template-columns:repeat(7,1fr);
+          color:#888;
+          padding:10px 0 4px;
+        }
+
+        .cal-grid {
+          display:grid;
+          grid-template-columns:repeat(7,1fr);
+          gap:8px;
+        }
+
+        .cal-cell {
+          height:56px;
+          border-radius:12px;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          background:white;
+          cursor:pointer;
+          font-weight:600;
+          transition:.15s;
+        }
+
+        .cal-cell.disabled {
+          opacity:0.4;
+          cursor:default;
+        }
+
+        .cal-cell.today {
+          border:2px solid var(--pink);
+        }
+
+        /* Flo-style start + end circles */
+        .cal-cell.start, .cal-cell.end {
+          background:var(--pink) !important;
+          color:#fff !important;
+          box-shadow:0 10px 22px rgba(243,122,122,0.18);
+          border-radius:50%;
+          width:44px;height:44px;
+          display:flex;justify-content:center;align-items:center;
+          margin:auto;
+        }
+
+        .cal-cell.inrange {
+          background:linear-gradient(90deg,rgba(243,122,122,0.12),rgba(243,122,122,0.08)) !important;
+          border-radius:10px;
+          color:#6b0d12;
+        }
+
+        /* RIGHT COLUMN */
+        .section-card{
+          background:white;
+          padding:18px;
+          border-radius:16px;
+          box-shadow:0 8px 24px rgba(0,0,0,0.06);
+          margin-bottom:20px;
+        }
+
+        .summary-row{
+          display:flex;
+          gap:16px;
+        }
+
+        .summary-card{
+          flex:1;
+          background:white;
+          padding:14px;
+          border-radius:14px;
+          box-shadow:0 8px 20px rgba(0,0,0,0.05);
+          text-align:center;
+        }
+
+        .summary-title{ font-weight:700; }
+        .summary-value{ color:var(--pink); font-weight:800; font-size:1.2rem; }
+
+        .score-big{
+          font-size:1.5rem;
+          font-weight:800;
+          color:var(--pink);
+        }
+
+        .timeline-line{
+          margin-bottom:6px;
+          color:#444;
+          font-size:0.95rem;
+        }
+
+        .insights ul{
+          margin-left:18px;margin-top:10px;color:var(--muted);
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-md">
+    <div class="container">
+
+        <!-- Logo → Dashboard -->
+        <a class="navbar-brand" href="user-dashboard.html">
+            <img src="../static/images/pcos_logo.png" alt="Maitri logo"/>
+            <span class="brand-name">
+                Ma<span class="i-grad">i</span>tr<span class="i-grad">i</span>
+            </span>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse justify-content-end" id="topNav">
+            <div class="nav-icons">
+
+                <!-- Cycle -->
+                <button class="icon-btn" onclick="window.location.href='cycle-tracker.html'">
+                    <i class="fa-solid fa-droplet"></i>
+                    <span class="d-none d-md-inline"> Cycle</span>
+                </button>
+
+                <!-- Symptom -->
+                <button class="icon-btn" onclick="window.location.href='symptom-tracker.html'">
+                    <i class="fa-solid fa-heart-pulse"></i>
+                    <span class="d-none d-md-inline"> Symptom</span>
+                </button>
+
+                <!-- Nutrition -->
+                <button class="icon-btn" onclick="window.location.href='nutrition.html'">
+                    <i class="fa-solid fa-utensils"></i>
+                    <span class="d-none d-md-inline"> Nutrition</span>
+                </button>
+
+                <!-- Reports -->
+                <button class="icon-btn" onclick="window.location.href='reports.html'">
+                    <i class="fa-solid fa-file-medical"></i>
+                    <span class="d-none d-md-inline"> Reports</span>
+                </button>
+
+                <!-- Logout -->
+                <button class="logout" onclick="window.location.href='login.html'">
+                    Logout
+                </button>
+
+            </div>
+        </div>
+
+    </div>
+</nav>
+
+<!-- MAIN -->
+<div class="container-main">
+    <div class="grid">
+
+        <!-- LEFT — CALENDAR -->
+        <div>
+            <div class="card">
+                <div class="cal-head">
+                    <div id="prevMonth" style="cursor:pointer;"><i class="fa-solid fa-chevron-left"></i></div>
+                    <div id="monthLabel"></div>
+                    <div id="nextMonth" style="cursor:pointer;"><i class="fa-solid fa-chevron-right"></i></div>
+                </div>
+
+                <div class="cal-week">
+                    <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
+                </div>
+
+                <div id="calendarGrid" class="cal-grid"></div>
+
+                <p style="font-size:.9rem; margin-top:16px; color:var(--muted);">
+                    Tap once to select <b>start</b>. Tap again to select <b>end</b>.
+                </p>
+            </div>
+
+            <!-- LAST CYCLE CARD -->
+            <div id="lastCycleCard" class="section-card" style="margin-top:20px; display:none;">
+                <div style="font-weight:700; margin-bottom:4px;">Last Logged Cycle</div>
+                <div id="lastCycleText" style="color:#444;"></div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div>
+
+            <!-- SUMMARY CARDS -->
+            <div class="section-card">
+                <div class="summary-row">
+                    <div class="summary-card">
+                        <div class="summary-title">Period Cycle Length</div>
+                        <div id="cycle-length" class="summary-value">—</div>
+                    </div>
+
+                    <div class="summary-card">
+                        <div class="summary-title">Previous Period</div>
+                        <div id="prev-length" class="summary-value">—</div>
+                    </div>
+
+                    <div class="summary-card">
+                        <div class="summary-title">Next Period In</div>
+                        <div id="next-in" class="summary-value">—</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REGULARITY SCORE -->
+            <div class="section-card">
+                <div>
+                    <div style="font-weight:700;">Cycle Regularity Score</div>
+                    <div id="reg-score" class="score-big">—</div>
+                    <div style="color:var(--muted); font-size:.9rem;">Based on past cycles</div>
+                </div>
+            </div>
+
+            <!-- UPDATED TIMELINE WITH DROPDOWN -->
+            <div class="section-card">
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <h5 style="font-weight:700; margin:0;">Cycle History Timeline</h5>
+
+                    <select id="timelineCount" class="form-select" style="width:120px; font-weight:600;">
+                        <option value="1">Last 1</option>
+                        <option value="2">Last 2</option>
+                        <option value="3" selected>Last 3</option>
+                        <option value="4">Last 4</option>
+                        <option value="5">Last 5</option>
+                    </select>
+                </div>
+
+                <div id="timelineBox"></div>
+            </div>
+
+            <!-- INSIGHTS -->
+            <div class="section-card insights">
+                <h5 style="font-weight:700;">Insights & Recommendations</h5>
+                <ul>
+                    <li>Your recent cycles show stable patterns.</li>
+                    <li>Average cycle length remains steady at ~28 days.</li>
+                    <li>Moderate exercise helps reduce severity of symptoms.</li>
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- JS -->
+<script>
+    /* ===== Helpers ===== */
+    const pad=n=>String(n).padStart(2,"0");
+
+    /* Track selections */
+    let viewDate=new Date();
+    let startSel=null, endSel=null;
+
+    const grid=document.getElementById("calendarGrid");
+    const monthLabel=document.getElementById("monthLabel");
+
+    /* ===== Render Calendar ===== */
+    function renderCalendar(){
+      const y=viewDate.getFullYear();
+      const m=viewDate.getMonth();
+      const first=new Date(y,m,1).getDay();
+      const days=new Date(y,m+1,0).getDate();
+      const prevDays=new Date(y,m,0).getDate();
+
+      monthLabel.textContent=viewDate.toLocaleString("default",{month:"long",year:"numeric"});
+      grid.innerHTML="";
+
+      let cells=[];
+
+      for(let i=0;i<42;i++){
+        const cell=document.createElement("div");
+        cell.className="cal-cell";
+
+        if(i<first){
+          cell.textContent = prevDays-(first-1-i);
+          cell.classList.add("disabled");
+        }
+        else if(i<first+days){
+          const d=i-first+1;
+          const iso=`${y}-${pad(m+1)}-${pad(d)}`;
+          cell.textContent=d;
+
+          const today=new Date();
+          const todayISO=`${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+          if(iso===todayISO) cell.classList.add("today");
+
+          cell.onclick=()=>handleClick(iso);
+
+          cells.push({iso,el:cell});
+        }
+        else{
+          cell.textContent=i-first-days+1;
+          cell.classList.add("disabled");
+        }
+
+        grid.appendChild(cell);
+      }
+
+      applyRange(cells);
+    }
+
+    /* Handle date selection */
+    function handleClick(date){
+      if(!startSel){
+        startSel=date;
+      }
+      else if(startSel && !endSel){
+        endSel=date;
+        saveCycle(startSel,endSel);
+      }
+      else{
+        startSel=date;
+        endSel=null;
+      }
+      renderCalendar();
+    }
+
+    /* Highlight selected range */
+    function applyRange(cells){
+      if(!startSel) return;
+
+      const s=new Date(startSel);
+      const startCell=cells.find(c=>c.iso===startSel);
+      if(startCell) startCell.el.classList.add("start");
+
+      if(endSel){
+        const e=new Date(endSel);
+        const endCell=cells.find(c=>c.iso===endSel);
+        if(endCell) endCell.el.classList.add("end");
+
+        let [min,max]=s<e?[s,e]:[e,s];
+
+        cells.forEach(c=>{
+          const cur=new Date(c.iso);
+          if(cur>min && cur<max){
+            c.el.classList.add("inrange");
+          }
+        });
+      }
+    }
+
+    /* ===== Save cycles ===== */
+    function saveCycle(start,end){
+      let history = JSON.parse(localStorage.getItem("maitri_cycles")||"[]");
+
+      history.unshift({start,end});
+      localStorage.setItem("maitri_cycles",JSON.stringify(history));
+
+      updateTimeline();
+      updateLastCycleCard();
+      updateSummaryCards();
+    }
+
+    function fmt(date){
+      const d=new Date(date);
+      return d.toLocaleString("default",{month:"short",day:"numeric"});
+    }
+
+    /* ===== Timeline (with dropdown) ===== */
+    function updateTimeline(){
+      const box=document.getElementById("timelineBox");
+      const selector=document.getElementById("timelineCount");
+
+      let history = JSON.parse(localStorage.getItem("maitri_cycles")||"[]");
+      const count=parseInt(selector.value);
+
+      const sliced = history.slice(0,count);
+
+      box.innerHTML="";
+
+      sliced.forEach(c=>{
+        const s=new Date(c.start);
+        const e=new Date(c.end);
+        const diff=Math.round((e-s)/(1000*60*60*24))+1;
+
+        box.innerHTML += `
+            <div class="timeline-line">
+                ${fmt(c.start)} → ${fmt(c.end)} — ${diff} days
+            </div>
+        `;
+      });
+    }
+
+    document.getElementById("timelineCount").addEventListener("change",updateTimeline);
+
+    /* ===== Last Cycle Card ===== */
+    function updateLastCycleCard(){
+      const card=document.getElementById("lastCycleCard");
+      const txt=document.getElementById("lastCycleText");
+
+      let history = JSON.parse(localStorage.getItem("maitri_cycles")||"[]");
+      if(history.length===0){
+        card.style.display="none";
+        return;
+      }
+
+      const c=history[0];
+      const s=new Date(c.start);
+      const e=new Date(c.end);
+      const diff=Math.round((e-s)/(1000*60*60*24))+1;
+
+      txt.innerHTML = `${fmt(c.start)} – ${fmt(c.end)} (${diff} days)`;
+      card.style.display="block";
+    }
+
+    /* ===== Summary Cards ===== */
+    function updateSummaryCards(){
+      let history = JSON.parse(localStorage.getItem("maitri_cycles")||"[]");
+
+      if(history.length===0) return;
+
+      const latest=history[0];
+      const s=new Date(latest.start);
+      const e=new Date(latest.end);
+      const diff=Math.round((e-s)/(1000*60*60*24))+1;
+
+      document.getElementById("cycle-length").textContent = diff+" days";
+
+      if(history.length>1){
+        const prev=history[1];
+        const ps=new Date(prev.start);
+        const pe=new Date(prev.end);
+        const pdiff=Math.round((pe-ps)/(1000*60*60*24))+1;
+
+        document.getElementById("prev-length").textContent = pdiff+" days";
+      }
+
+      document.getElementById("next-in").textContent="—";
+      document.getElementById("reg-score").textContent="84%";
+    }
+
+    /* Navigation */
+    document.getElementById("prevMonth").onclick=()=>{
+      viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()-1,1);
+      renderCalendar();
+    };
+    document.getElementById("nextMonth").onclick=()=>{
+      viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()+1,1);
+      renderCalendar();
+    };
+
+    /* INIT */
+    renderCalendar();
+    updateTimeline();
+    updateLastCycleCard();
+    updateSummaryCards();
+</script>
+
+</body>
+</html>

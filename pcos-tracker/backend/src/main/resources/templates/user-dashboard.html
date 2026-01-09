@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Maitri — Dashboard</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+    <style>
+        :root{
+          --pink:#F37A7A;
+          --softA:#ffd6e0;
+          --softB:#e9e8ff;
+          --muted:#6f6f6f;
+          --nav-h:76px;
+          --calendar-width:560px;
+        }
+
+        /* GLOBAL */
+        body{
+          margin:0;
+          padding-top:var(--nav-h);
+          font-family:'Poppins',sans-serif;
+          background:linear-gradient(120deg,var(--softA),var(--softB));
+        }
+
+        /* NAVBAR */
+        :root {
+  --nav-height: 76px; /* make sure this matches across files */
+}
+
+/* ---- NAVBAR (make dashboard identical to index) ---- */
+/* NAV */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--nav-h);
+  background: #fff;
+  z-index: 1200;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+.navbar .container {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.navbar-brand img {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.brand-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.brand-name .i-grad {
+  color: var(--pink);
+}
+
+.nav-icons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.icon-btn {
+  background: transparent;
+  border: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #444;
+  font-weight: 600;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.icon-btn:hover {
+  background: #fff4f6;
+  color: var(--pink);
+}
+
+.logout {
+  background: var(--pink);
+  color: #fff;
+  border: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+        /* MAIN GRID */
+        .main{max-width:1220px;margin:0 auto;padding:26px 20px}
+        .dashboard-grid{
+        display:grid;
+        grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr);
+        grid-template-rows: auto auto;
+        gap:30px;
+        align-items:start;
+        }
+
+        /* Stack on tablets & phones */
+        @media(max-width:991px){
+            .dashboard-grid{
+            grid-template-columns:1fr;
+        }
+        .area-rightcol{
+            margin-top:20px !important;
+        }
+        }
+
+
+        /* LEFT COLUMN */
+        .greet h2{font-size:1.6rem;font-weight:700;margin:0}
+        .greet p{color:var(--muted)}
+
+        .calendar-card{
+          background:#fff;border-radius:18px;padding:14px;
+          box-shadow:0 12px 32px rgba(0,0,0,0.06)
+        }
+
+        .mini-calendar{background:#fff;border-radius:12px;padding:12px;border:1px solid #ffdbe6}
+        .cal-head{display:flex;justify-content:space-between;font-weight:700}
+        .cal-week{display:flex;justify-content:space-between;margin-top:10px;color:#777}
+        .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:12px}
+
+        /* NON-CLICKABLE CELLS */
+        .cal-cell{
+          height:58px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+          font-weight:700;background:#fff;
+          pointer-events:none !important; /* disables click */
+          cursor: default !important;
+        }
+        .cal-cell.disabled{opacity:.35}
+        .cal-cell.period{
+          background:linear-gradient(180deg,#ffd6e0,#ffb6be);
+          color:#6b0d12;
+        }
+        .cal-cell.today{
+          background:transparent !important;
+          border:2px solid var(--pink);
+          font-weight:800;
+        }
+
+        /* SUMMARY CARDS */
+        .summary-row{display:flex;gap:10px;margin-top:14px}
+        .summary-card{flex:1;padding:12px;border-radius:12px}
+        .c1{background:linear-gradient(180deg,#fff1f3,#ffe9ee)}
+        .c2{background:linear-gradient(180deg,#fff7ef,#fff3e9)}
+        .c3{background:linear-gradient(180deg,#f4f0ff,#eef2ff)}
+
+        .score-box{background:#fff;padding:16px;border-radius:12px;margin-top:16px}
+        .score-big{font-size:1.45rem;font-weight:800;color:var(--pink)}
+
+
+        /* RIGHT COLUMN */
+        .area-rightcol{display:flex;flex-direction:column;gap:20px;margin-top:70px}
+        .dailylog{background:#fff;padding:16px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.06)}
+        .symptom-grid{display:flex;gap:10px;margin-top:15px; margin-bottom:19px}
+        .symptom{flex:1;text-align:center;padding:12px;border:1px solid #ffdce4;border-radius:10px}
+        .symptom i{font-size:22px;color:var(--pink)}
+        .btn-pink{
+          background:var(--pink)!important;
+          color:white!important;
+          font-weight:700;
+          border-radius:10px;
+          width:100%;
+          padding:10px;
+        }
+
+        /* EXERCISES */
+        .exercise-panel{background:#fff;padding:18px;border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.06)}
+        .exercises{display:grid;grid-template-columns:repeat(2,1fr);gap:32px;margin-top:16px}
+        .exercise-card{text-align:center;padding:20px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.06);background:#fff}
+        .exercise-card i{
+          width:80px;height:80px;border-radius:12px;background:#fff1f4;
+          display:flex;align-items:center;justify-content:center;font-size:34px;color:var(--pink);margin:0 auto 12px;
+        }
+
+        /* ROW 2 */
+        .timeline{
+          background:#fff;padding:18px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.06)
+        }
+        .insights{
+          background:#fff;padding:9px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.06)
+        }
+
+        /* MODAL FIXES */
+        .modal-backdrop{z-index:3000!important;}
+        .modal{z-index:4000!important;}
+        .modal-dialog{margin-top:50px}
+
+        .symptom-slider{
+  accent-color: var(--pink);
+}
+
+/* Chrome + Safari */
+.symptom-slider::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  height:20px;
+  width:20px;
+  background:var(--pink);
+  border-radius:50%;
+  border:3px solid #fff;
+  cursor:pointer;
+  box-shadow:0 4px 12px rgba(243,122,122,0.35);
+  margin-top:-6px;
+}
+
+/* Firefox */
+.symptom-slider::-moz-range-thumb{
+  height:20px;
+  width:20px;
+  background:var(--pink);
+  border-radius:50%;
+  border:3px solid #fff;
+  box-shadow:0 4px 12px rgba(243,122,122,0.35);
+}
+/* ========== AI FLOATING BUTTON (FAB) ========== */
+.food-ai-fab{
+  position:fixed;
+  bottom:24px;
+  right:24px;
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  background:#F37A7A;
+  color:#ffffff;
+  font-size:22px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  box-shadow:0 8px 24px rgba(243,122,122,0.4);
+  z-index:3000;
+  transition:transform 0.2s ease;
+}
+
+.food-ai-fab:hover{
+  transform:scale(1.08);
+}
+
+@keyframes aiPulse{
+  0%{ box-shadow:0 0 0 0 rgba(243,122,122,0.5); }
+  70%{ box-shadow:0 0 0 14px rgba(243,122,122,0); }
+  100%{ box-shadow:0 0 0 0 rgba(243,122,122,0); }
+}
+
+.food-ai-fab{
+  animation:aiPulse 2.8s infinite;
+}
+
+.food-ai-popup{
+  position:fixed;
+  bottom:90px;
+  right:24px;
+  width:320px;
+  background:#ffffff;
+  border-radius:18px;
+  box-shadow:0 12px 32px rgba(0,0,0,0.15);
+  display:none;
+  z-index:3000;
+  overflow:hidden;
+}
+
+.food-ai-header{
+  background:#fff4f6;
+  padding:12px 16px;
+  font-weight:700;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.food-ai-body{
+  padding:16px;
+}
+
+.food-ai-response{
+  font-size:0.9rem;
+  color:#444;
+  line-height:1.45;
+}
+
+.btn-pink{
+  background:#F37A7A;
+  color:white;
+  font-weight:600;
+  border-radius:12px;
+  border:none;
+  padding:10px;
+  box-shadow:0 6px 16px rgba(243,122,122,0.35);
+}
+
+.btn-pink:hover{
+  background:#ee6b6b;
+  color:white;
+}
+
+
+    </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-md">
+    <div class="container">
+
+        <!-- Logo → Dashboard -->
+        <a class="navbar-brand" href="user-dashboard.html">
+            <img src="../static/images/pcos_logo.png" alt="Maitri logo"/>
+            <span class="brand-name">
+                Ma<span class="i-grad">i</span>tr<span class="i-grad">i</span>
+            </span>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse justify-content-end" id="topNav">
+            <div class="nav-icons">
+
+                <!-- Cycle -->
+                <button class="icon-btn" onclick="window.location.href='cycle-tracker.html'">
+                    <i class="fa-solid fa-droplet"></i>
+                    <span class="d-none d-md-inline"> Cycle</span>
+                </button>
+
+                <!-- Symptom -->
+                <button class="icon-btn" onclick="window.location.href='symptom-tracker.html'">
+                    <i class="fa-solid fa-heart-pulse"></i>
+                    <span class="d-none d-md-inline"> Symptom</span>
+                </button>
+
+                <!-- Nutrition -->
+                <button class="icon-btn" onclick="window.location.href='nutrition.html'">
+                    <i class="fa-solid fa-utensils"></i>
+                    <span class="d-none d-md-inline"> Nutrition</span>
+                </button>
+
+                <!-- Reports -->
+                <button class="icon-btn" onclick="window.location.href='reports.html'">
+                    <i class="fa-solid fa-file-medical"></i>
+                    <span class="d-none d-md-inline"> Reports</span>
+                </button>
+
+                <!-- Logout -->
+                <button class="logout" onclick="window.location.href='login.html'">
+                    Logout
+                </button>
+
+            </div>
+        </div>
+
+    </div>
+</nav>
+
+
+
+<main class="main">
+    <div class="dashboard-grid">
+
+        <!-- LEFT CALENDAR -->
+        <div class="area-calendar">
+            <div class="greet">
+                <h2>Hi, User 🌸</h2>
+                <p>You deserve gentleness — welcome back.</p>
+            </div>
+
+            <div class="calendar-card">
+                <div class="mini-calendar">
+
+                    <div class="cal-head">
+                        <div id="prevBtn" class="chev"><i class="fa-solid fa-chevron-left"></i></div>
+                        <div id="monthLabel"></div>
+                        <div id="nextBtn" class="chev"><i class="fa-solid fa-chevron-right"></i></div>
+                    </div>
+
+                    <div class="cal-week"><div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div></div>
+
+                    <div id="calendarGrid" class="cal-grid"></div>
+
+                </div>
+
+                <div class="summary-row">
+                    <div class="summary-card c1">Period Cycle Length<br><span style="color:var(--muted)">30 days — Normal</span></div>
+                    <div class="summary-card c2">Previous Period<br><span style="color:var(--muted)">5 days — Normal</span></div>
+                    <div class="summary-card c3">Next Period In<br><span style="color:var(--muted)">15 days</span></div>
+                </div>
+
+                <div class="score-box">
+                    <div style="display:flex;justify-content:space-between;">
+                        <div><div style="font-weight:700;">Cycle Regularity Score</div><div class="score-big">76%</div></div>
+                        <div style="color:var(--muted)">Based on last 3 cycles</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Daily Log + Exercises -->
+        <div class="area-rightcol">
+
+            <div class="dailylog">
+                <div class="date-display">Today · <span id="todayLabel"></span></div>
+                <div class="date-sub">Daily Log</div>
+
+                <div class="symptom-grid">
+                    <div class="symptom"><i class="fa-solid fa-circle-exclamation"></i><div>Cramps</div></div>
+                    <div class="symptom"><i class="fa-solid fa-circle-half-stroke"></i><div>Acne</div></div>
+                    <div class="symptom"><i class="fa-solid fa-face-smile"></i><div>Mood</div></div>
+                </div>
+
+                <button class="btn btn-pink" data-bs-toggle="modal" data-bs-target="#dailyLogModal">Daily Log</button>
+            </div>
+
+            <!-- Exercise Suggestions -->
+            <div class="exercise-panel">
+                <h4>Exercise Suggestions</h4>
+
+                <div class="exercises">
+                    <div class="exercise-card"><i class="fa-solid fa-person-walking"></i><strong>Walking</strong><div>20–30 min</div></div>
+                    <div class="exercise-card"><i class="fa-solid fa-person-praying"></i><strong>Butterfly Pose</strong><div>Yoga stretch</div></div>
+                    <div class="exercise-card"><i class="fa-solid fa-child-reaching"></i><strong>Child's Pose</strong><div>Restorative</div></div>
+                    <div class="exercise-card"><i class="fa-solid fa-bicycle"></i><strong>Cycling</strong><div>Low impact</div></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ROW 2 -->
+        <div class="area-timeline timeline">
+            <h5>Cycle History Timeline</h5>
+            <strong>Cycle 1:</strong> 30 days<br>
+            <strong>Cycle 2:</strong> 28 days<br>
+            <strong>Cycle 3:</strong> 36 days
+        </div>
+
+        <div class="area-insights insights">
+            <h5>Insights & Recommendations</h5>
+            <ul>
+                <li>Your cycle regularity is improving.</li>
+                <li>Fertile window aligns with symptoms.</li>
+                <li>Walking 20 min improves hormones.</li>
+            </ul>
+        </div>
+
+    </div>
+</main>
+
+<!-- DAILY LOG MODAL -->
+<div class="modal fade" id="dailyLogModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:20px;padding:20px;">
+
+            <h4 class="text-center fw-bold">Daily Log</h4>
+            <p class="text-center" style="color:#777;margin-top:-4px;">Rate today’s symptoms (0–10)</p>
+
+            <div class="modal-body">
+
+                <!-- SLIDER TEMPLATE -->
+                <div class="mb-3">
+                    <label class="fw-semibold">Cramps</label>
+                    <div class="d-flex align-items-center gap-3">
+                        <input type="range" class="form-range symptom-slider" id="cramps" min="0" max="10" value="0">
+                        <span id="val-cramps" class="fw-bold">0</span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="fw-semibold">Acne</label>
+                    <div class="d-flex align-items-center gap-3">
+                        <input type="range" class="form-range symptom-slider" id="acne" min="0" max="10" value="0">
+                        <span id="val-acne" class="fw-bold">0</span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="fw-semibold">Mood</label>
+                    <div class="d-flex align-items-center gap-3">
+                        <input type="range" class="form-range symptom-slider" id="mood" min="0" max="10" value="5">
+                        <span id="val-mood" class="fw-bold">5</span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="fw-semibold">Bloating</label>
+                    <div class="d-flex align-items-center gap-3">
+                        <input type="range" class="form-range symptom-slider" id="bloating" min="0" max="10" value="0">
+                        <span id="val-bloating" class="fw-bold">0</span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="fw-semibold">Fatigue</label>
+                    <div class="d-flex align-items-center gap-3">
+                        <input type="range" class="form-range symptom-slider" id="fatigue" min="0" max="10" value="0">
+                        <span id="val-fatigue" class="fw-bold">0</span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="fw-semibold">Headache</label>
+                    <div class="d-flex align-items-center gap-3">
+                        <input type="range" class="form-range symptom-slider" id="headache" min="0" max="10" value="0">
+                        <span id="val-headache" class="fw-bold">0</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- FOOTER FIXED -->
+            <div class="modal-footer d-flex justify-content-center gap-3 w-100">
+                <button class="btn btn-outline-secondary flex-fill py-2"
+                        data-bs-dismiss="modal" style="border-radius:10px;">
+                    Cancel
+                </button>
+
+                <button class="btn btn-pink flex-fill py-2 fw-bold"
+                        id="saveDailyLog" style="border-radius:10px;">
+                    Save
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById("todayLabel").textContent =
+      new Date().toLocaleString("default",{weekday:"short",month:"short",day:"numeric"});
+
+    /* SLIDER OUTPUT */
+    ["cramps","acne","mood","bloating","fatigue","headache"].forEach(id=>{
+      const s=document.getElementById(id);
+      const v=document.getElementById("val-"+id);
+      s.addEventListener("input",()=>v.textContent=s.value);
+    });
+
+    /* AUTO CLOSE ON SAVE */
+    document.getElementById("saveDailyLog").addEventListener("click",()=>{
+      const btn=document.getElementById("saveDailyLog");
+      btn.textContent="Saved ✓";
+      btn.style.background="#2ecc71";
+      setTimeout(()=>{
+        btn.textContent="Save";
+        btn.style.background="";
+        bootstrap.Modal.getInstance(document.getElementById("dailyLogModal")).hide();
+      },900);
+    });
+
+    /* NON-CLICKABLE CALENDAR — just dynamic display */
+    const pad=n=>String(n).padStart(2,"0");
+    const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+
+    let view=new Date();
+    const calGrid=document.getElementById("calendarGrid");
+    const monthLbl=document.getElementById("monthLabel");
+
+    const periodRanges=[{start:"2025-11-02",end:"2025-11-06"}];
+
+    function inPeriod(date){
+      for(const r of periodRanges){
+        if(date>=r.start && date<=r.end) return true;
+      }
+      return false;
+    }
+
+    function renderCal(){
+      const y=view.getFullYear(),m=view.getMonth();
+      monthLbl.textContent=view.toLocaleString("default",{month:"long",year:"numeric"});
+
+      calGrid.innerHTML="";
+      const first=new Date(y,m,1).getDay();
+      const days=new Date(y,m+1,0).getDate();
+      const prevDays=new Date(y,m,0).getDate();
+
+      const todayKey=ymd(new Date());
+
+      for(let i=0;i<42;i++){
+        const cell=document.createElement("div");
+        cell.className="cal-cell";
+
+        if(i<first){
+          cell.textContent=prevDays-(first-1-i);
+          cell.classList.add("disabled");
+        } else if(i<first+days){
+          const d=i-first+1;
+          const dateKey=`${y}-${pad(m+1)}-${pad(d)}`;
+          cell.textContent=d;
+
+          if(inPeriod(dateKey)) cell.classList.add("period");
+          if(dateKey===todayKey) cell.classList.add("today");
+
+        } else {
+          cell.textContent=i-(first+days)+1;
+          cell.classList.add("disabled");
+        }
+
+        calGrid.appendChild(cell);
+      }
+    }
+
+    document.getElementById("prevBtn").onclick=()=>{view=new Date(view.getFullYear(),view.getMonth()-1,1);renderCal();}
+    document.getElementById("nextBtn").onclick=()=>{view=new Date(view.getFullYear(),view.getMonth()+1,1);renderCal();}
+
+    renderCal();
+
+    function toggleDashboardAI(){
+  const popup = document.getElementById("dashboardAIPopup");
+  popup.style.display = popup.style.display === "block" ? "none" : "block";
+}
+
+function generateDashboardAI(){
+  const responseBox = document.getElementById("dashboardAIResponse");
+
+  responseBox.innerHTML = "Maitri AI is reviewing your health patterns… 💭";
+
+  // MOCK SUMMARY — backend later
+  setTimeout(() => {
+    responseBox.innerHTML =
+      "Your recent cycles show improving regularity, and while some symptoms like fatigue appear occasionally, your overall pattern suggests positive progress. Remember to stay hydrated, rest when needed, and be kind to yourself 🌷";
+  }, 1400);
+}
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- FLOATING DASHBOARD AI BUTTON -->
+<div id="dashboardAIFab" class="food-ai-fab" onclick="toggleDashboardAI()">
+    <i class="fa-solid fa-wand-magic-sparkles"></i>
+</div>
+
+<!-- DASHBOARD AI POPUP -->
+<div id="dashboardAIPopup" class="food-ai-popup">
+    <div class="food-ai-header">
+        Maitri AI 🌸
+        <span onclick="toggleDashboardAI()" style="cursor:pointer;">✕</span>
+    </div>
+
+    <div class="food-ai-body">
+        <p style="font-size:0.9rem;color:#666;">
+            Here’s a gentle summary of your health patterns 💗
+        </p>
+
+        <button class="btn btn-pink w-100 mt-2" onclick="generateDashboardAI()">
+            Get My Health Summary
+        </button>
+
+        <div id="dashboardAIResponse" class="food-ai-response mt-3"></div>
+    </div>
+</div>
+
+</body>
+</html>

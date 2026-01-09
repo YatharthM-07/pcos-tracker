@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Maitri — Nutrition Guide</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+
+    <!-- Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+    <style>
+        :root {
+          --pink:#F37A7A;
+          --softA:#ffd6e0;
+          --softB:#e9e8ff;
+          --muted:#6f6f6f;
+          --nav-h:76px;
+        }
+
+        body{
+          margin:0;
+          padding-top:var(--nav-h);
+          background:linear-gradient(120deg,var(--softA),var(--softB));
+          font-family:'Poppins',sans-serif;
+        }
+
+        /* NAVBAR (same as dashboard) */
+        .navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--nav-h);
+  background: #fff;
+  z-index: 1200;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+.navbar .container {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.navbar-brand img {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.brand-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.brand-name .i-grad {
+  color: var(--pink);
+}
+
+.nav-icons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.icon-btn {
+  background: transparent;
+  border: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #444;
+  font-weight: 600;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.icon-btn:hover {
+  background: #fff4f6;
+  color: var(--pink);
+}
+
+.logout {
+  background: var(--pink);
+  color: #fff;
+  border: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+        /* MAIN */
+        .main{
+          max-width:1250px;
+          margin:0 auto;
+          padding:28px 20px;
+        }
+
+        /* SEARCH BAR CARD */
+        .search-card{
+          background:white;
+          padding:22px;
+          border-radius:18px;
+          box-shadow:0 10px 32px rgba(0,0,0,0.06);
+          margin-bottom:20px;
+        }
+
+        /* FILTER BUTTONS */
+        .filter-btn{
+          border:0;
+          padding:8px 14px;
+          background:#fff;
+          border-radius:10px;
+          box-shadow:0 4px 10px rgba(0,0,0,0.06);
+          font-weight:600;
+          margin-right:10px;
+          cursor:pointer;
+        }
+        .filter-btn.active{
+          background:var(--pink);
+          color:white;
+        }
+
+        /* TAG FILTERS */
+        .tag-good{background:#d9f8d9;color:#187c1f;font-weight:700;padding:6px 14px;border-radius:12px;}
+        .tag-limit{background:#fff5d6;color:#a06b00;font-weight:700;padding:6px 14px;border-radius:12px;}
+        .tag-avoid{background:#ffe1e1;color:#b42020;font-weight:700;padding:6px 14px;border-radius:12px;}
+        .tag-btn{cursor:pointer;margin-right:10px;}
+
+        /* FOOD CARDS */
+        .food-card{
+          background:white;
+          padding:18px;
+          border-radius:16px;
+          box-shadow:0 10px 28px rgba(0,0,0,0.06);
+          transition:0.2s;
+          cursor:pointer;
+        }
+        .food-card:hover{
+          transform:translateY(-3px);
+          box-shadow:0 14px 34px rgba(0,0,0,0.08);
+        }
+        .food-name{
+          font-size:1.1rem;
+          font-weight:700;
+        }
+        .food-category{
+          color:var(--muted);
+          font-size:0.9rem;
+          margin-bottom:4px;
+        }
+        .food-tag{
+          display:inline-block;
+          padding:4px 10px;
+          border-radius:10px;
+          font-weight:700;
+          font-size:0.8rem;
+        }
+
+        /* Popup Modal */
+        .modal-content{
+          border-radius:20px;
+          padding:20px;
+        }
+        /* FLOATING AI BUTTON */
+.food-ai-fab{
+  position:fixed;
+  bottom:24px;
+  right:24px;
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  background:#F37A7A;
+  color:#ffffff;
+  font-size:24px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  box-shadow:0 8px 24px rgba(243,122,122,0.4);
+  z-index:3000;
+  transition:transform 0.2s;
+  text-shadow:0 2px 6px rgba(0,0,0,0.25);
+}
+
+.food-ai-fab:hover{
+  transform:scale(1.08);
+}
+
+/* FOOD AI POPUP */
+.food-ai-popup{
+  position:fixed;
+  bottom:90px;
+  right:24px;
+  width:300px;
+  background:white;
+  border-radius:16px;
+  box-shadow:0 12px 32px rgba(0,0,0,0.15);
+  display:none;
+  z-index:3000;
+  overflow:hidden;
+}
+
+.food-ai-header{
+  background:#fff4f6;
+  padding:12px 16px;
+  font-weight:700;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.food-ai-body{
+  padding:14px;
+}
+
+.food-ai-response{
+  font-size:0.9rem;
+  color:#444;
+}
+.btn-pink{
+  background:#F37A7A;
+  color:white;
+  font-weight:600;
+  border-radius:12px;
+  border:none;
+  padding:10px;
+  box-shadow:0 6px 16px rgba(243,122,122,0.35);
+}
+
+.btn-pink:hover{
+  background:#ee6b6b;
+  color:white;
+}
+
+    </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-md">
+    <div class="container">
+
+        <!-- Logo → Dashboard -->
+        <a class="navbar-brand" href="user-dashboard.html">
+            <img src="../static/images/pcos_logo.png" alt="Maitri logo"/>
+            <span class="brand-name">
+                Ma<span class="i-grad">i</span>tr<span class="i-grad">i</span>
+            </span>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse justify-content-end" id="topNav">
+            <div class="nav-icons">
+
+                <!-- Cycle -->
+                <button class="icon-btn" onclick="window.location.href='cycle-tracker.html'">
+                    <i class="fa-solid fa-droplet"></i>
+                    <span class="d-none d-md-inline"> Cycle</span>
+                </button>
+
+                <!-- Symptom -->
+                <button class="icon-btn" onclick="window.location.href='symptom-tracker.html'">
+                    <i class="fa-solid fa-heart-pulse"></i>
+                    <span class="d-none d-md-inline"> Symptom</span>
+                </button>
+
+                <!-- Nutrition -->
+                <button class="icon-btn" onclick="window.location.href='nutrition.html'">
+                    <i class="fa-solid fa-utensils"></i>
+                    <span class="d-none d-md-inline"> Nutrition</span>
+                </button>
+
+                <!-- Reports -->
+                <button class="icon-btn" onclick="window.location.href='reports.html'">
+                    <i class="fa-solid fa-file-medical"></i>
+                    <span class="d-none d-md-inline"> Reports</span>
+                </button>
+
+                <!-- Logout -->
+                <button class="logout" onclick="window.location.href='login.html'">
+                    Logout
+                </button>
+
+            </div>
+        </div>
+
+    </div>
+</nav>
+
+<!-- MAIN SECTION -->
+<div class="main">
+
+    <!-- Search Bar -->
+    <div class="search-card">
+        <h3 style="font-weight:700;">Nutrition Guide</h3>
+        <p style="color:var(--muted);margin-top:-4px;">Search foods and see PCOS-friendly tags</p>
+
+        <div class="input-group mt-3">
+            <input id="searchInput" type="text" class="form-control form-control-lg" placeholder="Search any food — rice, dal, almonds…">
+            <button class="btn btn-lg" style="background:var(--pink);color:white;" onclick="searchFood()">
+                <i class="fa-solid fa-search"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Category Filters -->
+    <div class="mb-3">
+        <button class="filter-btn" onclick="filterCategory('Fruits')">Fruits</button>
+        <button class="filter-btn" onclick="filterCategory('Vegetable')">Vegetables</button>
+        <button class="filter-btn" onclick="filterCategory('Grain')">Grains</button>
+        <button class="filter-btn" onclick="filterCategory('Pulses')">Pulses</button>
+        <button class="filter-btn" onclick="filterCategory('Snacks')">Snacks</button>
+        <button class="filter-btn" onclick="filterCategory('Indian Meal')">Indian Meals</button>
+        <button class="filter-btn" onclick="filterCategory('Beverage')">Beverages</button>
+    </div>
+
+    <!-- PCOS Tag Filters -->
+    <div class="mb-4">
+        <span class="tag-btn tag-good" onclick="filterTag('GOOD')">GOOD</span>
+        <span class="tag-btn tag-limit" onclick="filterTag('LIMIT')">LIMIT</span>
+        <span class="tag-btn tag-avoid" onclick="filterTag('AVOID')">AVOID</span>
+    </div>
+
+    <!-- Food Items Container -->
+    <div id="foodContainer" class="row g-4"></div>
+</div>
+
+<!-- FOOD DETAIL MODAL -->
+<div class="modal fade" id="foodDetailModal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <h4 id="detailName" class="fw-bold"></h4>
+            <p id="detailCategory" class="text-muted"></p>
+            <span id="detailTag"></span>
+            <p id="detailDescription" class="mt-3"></p>
+        </div>
+    </div>
+</div>
+
+<!-- JS -->
+<script>
+    // Mock sample data (Replace with backend fetch)
+    let foods = [
+      {name:"Brown Rice", category:"Grain", tag:"GOOD", description:"Low GI and supports insulin sensitivity."},
+      {name:"White Rice", category:"Grain", tag:"AVOID", description:"High GI and spikes blood sugar."},
+      {name:"Almonds", category:"Fruits", tag:"GOOD", description:"Rich in healthy fats and fiber."},
+      {name:"Potato Fries", category:"Snacks", tag:"AVOID", description:"Highly inflammatory and fried."},
+      {name:"Roti (Whole Wheat)", category:"Indian Meal", tag:"GOOD", description:"High fiber alternative to maida products."},
+      {name:"Mango Shake", category:"Beverage", tag:"LIMIT", description:"High natural sugars; consume moderately."}
+    ];
+
+    // Render food list
+    function renderFoods(list){
+      const container = document.getElementById("foodContainer");
+      container.innerHTML = "";
+
+      list.forEach(item => {
+        container.innerHTML += `
+          <div class="col-md-4">
+            <div class="food-card" onclick="openDetail('${item.name}')">
+              <div class="food-name">${item.name}</div>
+              <div class="food-category">${item.category}</div>
+              <div class="food-tag ${item.tag === 'GOOD' ? 'tag-good' : item.tag === 'LIMIT' ? 'tag-limit' : 'tag-avoid'}">${item.tag}</div>
+              <p style="font-size:.9rem;color:#555;margin-top:8px;">${item.description}</p>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function searchFood(){
+      const value = document.getElementById("searchInput").value.toLowerCase();
+      const results = foods.filter(f => f.name.toLowerCase().includes(value));
+      renderFoods(results);
+    }
+
+    function filterCategory(cat){
+      renderFoods(foods.filter(f => f.category === cat));
+    }
+
+    function filterTag(tag){
+      renderFoods(foods.filter(f => f.tag === tag));
+    }
+
+    function openDetail(name){
+      const item = foods.find(f => f.name === name);
+      document.getElementById("detailName").textContent = item.name;
+      document.getElementById("detailCategory").textContent = item.category;
+      document.getElementById("detailTag").innerHTML =
+        `<span class="food-tag ${item.tag === 'GOOD' ? 'tag-good' : item.tag === 'LIMIT' ? 'tag-limit' : 'tag-avoid'}">${item.tag}</span>`;
+      document.getElementById("detailDescription").textContent = item.description;
+
+      new bootstrap.Modal(document.getElementById("foodDetailModal")).show();
+    }
+
+    // Initial load
+    renderFoods(foods);
+
+    function toggleFoodAI(){
+  const popup = document.getElementById("foodAIPopup");
+  popup.style.display = popup.style.display === "block" ? "none" : "block";
+}
+
+function askFoodAI(){
+  const input = document.getElementById("foodAIInput").value.trim();
+  const responseBox = document.getElementById("foodAIResponse");
+
+  if(!input){
+    responseBox.innerHTML = "Please tell me what kind of food you want 🌱";
+    return;
+  }
+
+  responseBox.innerHTML = "Maitri AI is thinking… 💭";
+
+  // MOCK RESPONSE (backend later)
+  setTimeout(() => {
+    responseBox.innerHTML =
+      "For PCOS, try whole grains like oats or millets, vegetables like spinach and broccoli, and healthy fats like nuts and seeds. Avoid refined sugar and fried foods 💗";
+  }, 1200);
+}
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<div id="foodAIFab" class="food-ai-fab" onclick="toggleFoodAI()">
+    <i class="fa-solid fa-wand-magic-sparkles"></i>
+</div>
+
+
+<!-- FOOD AI POPUP -->
+<div id="foodAIPopup" class="food-ai-popup">
+    <div class="food-ai-header">
+        Maitri AI 🌸
+        <span onclick="toggleFoodAI()" style="cursor:pointer;">✕</span>
+    </div>
+
+    <div class="food-ai-body">
+        <p style="font-size:0.9rem;color:#666;">
+            Get PCOS-friendly food suggestions based on your needs.
+        </p>
+
+        <input
+                type="text"
+                id="foodAIInput"
+                class="form-control"
+                placeholder="e.g. PCOS breakfast, vegetarian snacks"
+        />
+
+        <button class="btn btn-pink w-100 mt-2" onclick="askFoodAI()">
+            Get Suggestions
+        </button>
+
+        <div id="foodAIResponse" class="food-ai-response mt-3"></div>
+    </div>
+</div>
+
+</body>
+</html>

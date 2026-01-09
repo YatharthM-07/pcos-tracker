@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Maitri — Symptom Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+    <style>
+        :root{
+          --pink:#F37A7A;
+          --softA:#ffd6e0;
+          --softB:#e9e8ff;
+          --muted:#6f6f6f;
+          --nav-h:76px;
+        }
+
+        /* GLOBAL */
+        body{
+          margin:0;
+          padding-top:var(--nav-h);
+          font-family:'Poppins',sans-serif;
+          background:linear-gradient(120deg,var(--softA),var(--softB));
+        }
+
+        /* NAVBAR */
+        .navbar {
+          position: fixed;
+          top: 0; left: 0; right: 0;
+          height: var(--nav-h);
+          background: #fff;
+          z-index: 1200;
+          box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+        }
+        .navbar .container {
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+        .navbar-brand {
+          display:flex;
+          align-items:center;
+          gap:12px;
+          text-decoration:none;
+          color:inherit;
+        }
+        .navbar-brand img{
+          width:56px;height:56px;border-radius:12px;
+        }
+        .brand-name{
+          font-family:'Playfair Display',serif;
+          font-size:2rem;
+          font-weight:800;
+        }
+        .brand-name .i-grad{color:var(--pink);}
+        .nav-icons{
+          display:flex;
+          gap:12px;
+          align-items:center;
+        }
+        .icon-btn{
+          background:transparent;
+          border:0;
+          padding:8px 10px;
+          border-radius:8px;
+          font-weight:600;
+          display:flex;
+          gap:8px;
+          align-items:center;
+          color:#444;
+        }
+        .icon-btn:hover{
+          background:#fff4f6;
+          color:var(--pink);
+        }
+        .logout{
+          background:var(--pink);
+          color:#fff;
+          border:0;
+          padding:8px 12px;
+          border-radius:10px;
+          font-weight:700;
+        }
+
+        /* MAIN */
+        .main{
+          max-width:900px;
+          margin:0 auto;
+          padding:30px 20px;
+        }
+
+        /* CARD */
+        .card{
+          border:none;
+          border-radius:20px;
+          padding:24px;
+          margin-bottom:26px;
+          box-shadow:0 12px 30px rgba(0,0,0,0.08);
+        }
+
+        /* SYMPTOM GRID */
+        .symptom-grid{
+          display:grid;
+          grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+          gap:16px;
+        }
+        .symptom-item{
+          background:#fff;
+          border-radius:16px;
+          padding:16px;
+          text-align:center;
+          cursor:pointer;
+          transition:.25s;
+          border:2px solid transparent;
+        }
+        .symptom-item:hover{transform:translateY(-4px);}
+        .symptom-item.active{
+          border-color:var(--pink);
+          background:#fff4f6;
+        }
+        .symptom-item i{
+          font-size:26px;
+          color:var(--pink);
+        }
+        .symptom-item span{
+          display:block;
+          margin-top:8px;
+          font-weight:600;
+        }
+
+        /* SEVERITY */
+        .severity-emoji{font-size:38px;}
+        input[type=range]{accent-color:var(--pink);}
+
+        /* BUTTON */
+        .btn-pink{
+          background:var(--pink);
+          color:#fff;
+          border:none;
+          border-radius:14px;
+          padding:12px;
+          font-weight:600;
+          box-shadow:0 6px 16px rgba(243,122,122,0.35);
+        }
+        .btn-pink:hover{background:#ee6b6b;color:#fff;}
+
+        /* HISTORY */
+        .entry{
+          background:#fff;
+          border-radius:16px;
+          padding:16px;
+          margin-bottom:14px;
+          box-shadow:0 6px 16px rgba(0,0,0,0.06);
+        }
+        .entry small{color:var(--muted);}
+
+        /* === WELLNESS AI (Reusable) === */
+.food-ai-fab{
+  position:fixed;
+  bottom:24px;
+  right:24px;
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  background:#F37A7A;
+  color:#fff;
+  font-size:22px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  box-shadow:0 8px 24px rgba(243,122,122,0.4);
+  z-index:3000;
+}
+
+.food-ai-popup{
+  position:fixed;
+  bottom:90px;
+  right:24px;
+  width:320px;
+  background:#fff;
+  border-radius:18px;
+  box-shadow:0 12px 32px rgba(0,0,0,0.15);
+  display:none;
+  z-index:3000;
+  overflow:hidden;
+}
+
+.food-ai-header{
+  background:#fff4f6;
+  padding:12px 16px;
+  font-weight:700;
+  display:flex;
+  justify-content:space-between;
+}
+
+.food-ai-body{
+  padding:16px;
+}
+
+    </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-md">
+    <div class="container">
+        <a class="navbar-brand" href="user-dashboard.html">
+            <img src="../static/images/pcos_logo.png">
+            <span class="brand-name">Ma<span class="i-grad">i</span>tr<span class="i-grad">i</span></span>
+        </a>
+
+        <div class="nav-icons">
+            <button class="icon-btn" onclick="location.href='cycle-tracker.html'">
+                <i class="fa-solid fa-droplet"></i> Cycle
+            </button>
+            <button class="icon-btn" onclick="location.href='symptom-tracker.html'">
+                <i class="fa-solid fa-heart-pulse"></i> Symptom
+            </button>
+            <button class="icon-btn" onclick="location.href='nutrition.html'">
+                <i class="fa-solid fa-utensils"></i> Nutrition
+            </button>
+            <button class="icon-btn" onclick="location.href='reports.html'">
+                <i class="fa-solid fa-file-medical"></i> Reports
+            </button>
+            <button class="logout" onclick="location.href='login.html'">Logout</button>
+        </div>
+    </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+
+    <!-- SYMPTOM SELECTION -->
+    <div class="card">
+        <h4 class="fw-bold mb-3">How are you feeling today?</h4>
+
+        <div class="symptom-grid">
+            <div class="symptom-item" data-name="Cramps"><i class="fa-solid fa-bolt"></i><span>Cramps</span></div>
+            <div class="symptom-item" data-name="Fatigue"><i class="fa-solid fa-bed"></i><span>Fatigue</span></div>
+            <div class="symptom-item" data-name="Acne"><i class="fa-solid fa-face-smile"></i><span>Acne</span></div>
+            <div class="symptom-item" data-name="Mood Swings"><i class="fa-solid fa-face-meh"></i><span>Mood</span></div>
+            <div class="symptom-item" data-name="Bloating"><i class="fa-solid fa-circle"></i><span>Bloating</span></div>
+            <div class="symptom-item" data-name="Headache"><i class="fa-solid fa-head-side-virus"></i><span>Headache</span></div>
+        </div>
+    </div>
+
+    <!-- SEVERITY -->
+    <div class="card text-center">
+        <div class="severity-emoji" id="sevEmoji">😐</div>
+        <div class="fw-semibold mb-2">Severity</div>
+        <input type="range" min="0" max="10" value="5" id="sevRange">
+        <div>Level: <span id="sevVal">5</span>/10</div>
+    </div>
+
+    <!-- NOTES -->
+    <div class="card">
+        <label class="fw-semibold mb-2">Notes (optional)</label>
+        <textarea class="form-control" id="notes" rows="3"
+                  placeholder="Anything you want to note today…"></textarea>
+    </div>
+
+    <!-- SAVE DAILY -->
+    <button class="btn btn-pink w-100" onclick="saveDailyLog()">
+        Save Today’s Log
+    </button>
+
+    <!-- HISTORY -->
+    <div class="card mt-4">
+        <h5 class="fw-bold mb-3">Today’s Saved Symptoms</h5>
+        <div id="history"></div>
+    </div>
+
+</div>
+
+<script>
+    /* DAILY LOG STRUCTURE */
+    const today = new Date().toISOString().split("T")[0];
+    let selectedSymptom = null;
+
+    let dailyLog = {
+      date: today,
+      symptoms: {}
+    };
+
+    /* SYMPTOM SELECTION */
+    document.querySelectorAll(".symptom-item").forEach(item=>{
+      item.onclick=()=>{
+        document.querySelectorAll(".symptom-item")
+          .forEach(i=>i.classList.remove("active"));
+        item.classList.add("active");
+
+        selectedSymptom = item.dataset.name;
+
+        const saved = dailyLog.symptoms[selectedSymptom];
+        if(saved){
+          sevRange.value = saved.severity;
+          sevVal.textContent = saved.severity;
+          notes.value = saved.notes;
+        } else {
+          sevRange.value = 5;
+          sevVal.textContent = 5;
+          notes.value = "";
+        }
+
+        window.scrollTo({ top:0, behavior:"smooth" });
+      };
+    });
+
+    /* SEVERITY */
+    const sevRange = document.getElementById("sevRange");
+    const sevVal = document.getElementById("sevVal");
+    const sevEmoji = document.getElementById("sevEmoji");
+
+    function cacheSymptom(){
+      if(!selectedSymptom) return;
+      dailyLog.symptoms[selectedSymptom] = {
+        severity: sevRange.value,
+        notes: notes.value
+      };
+    }
+
+    sevRange.oninput=()=>{
+      sevVal.textContent = sevRange.value;
+      sevEmoji.textContent =
+        sevRange.value<=3 ? "🙂" :
+        sevRange.value<=6 ? "😐" : "😣";
+      cacheSymptom();
+    };
+
+    notes.oninput = cacheSymptom;
+
+    /* SAVE DAILY LOG */
+    function saveDailyLog(){
+      if(Object.keys(dailyLog.symptoms).length===0){
+        alert("Please log at least one symptom 🌸");
+        return;
+      }
+
+      console.log("Daily Log Payload:", dailyLog);
+
+      // BACKEND READY
+      /*
+      fetch("/symptoms/daily",{
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify(dailyLog)
+      });
+      */
+
+      renderHistory();
+    }
+
+    /* HISTORY */
+    function renderHistory(){
+      const box=document.getElementById("history");
+      box.innerHTML="";
+      Object.entries(dailyLog.symptoms).forEach(([name,data])=>{
+        box.innerHTML+=`
+          <div class="entry">
+            <div class="fw-semibold">${name} — ${data.severity}/10</div>
+            <small>${today}</small>
+            <div>${data.notes||"<em>No notes</em>"}</div>
+          </div>
+        `;
+      });
+    }
+    function toggleWellnessAI(){
+  const popup = document.getElementById("wellnessAIPopup");
+  popup.style.display =
+    popup.style.display === "block" ? "none" : "block";
+}
+
+function getWellnessAI(){
+  document.getElementById("wellnessAIResponse").innerHTML =
+    "You’ve taken an important step by logging your symptoms today 🌸 Try to stay hydrated, take gentle breaks, and be kind to yourself.";
+}
+</script>
+
+<!-- WELLNESS AI FLOATING BUTTON -->
+<div id="wellnessAIFab" class="food-ai-fab" onclick="toggleWellnessAI()">
+    <i class="fa-solid fa-wand-magic-sparkles"></i>
+</div>
+
+
+<!-- WELLNESS AI POPUP -->
+<div id="wellnessAIPopup" class="food-ai-popup">
+    <div class="food-ai-header">
+        Maitri AI 🌸
+        <span onclick="toggleWellnessAI()" style="cursor:pointer;">✕</span>
+    </div>
+    <div class="food-ai-body">
+        <p class="fw-semibold mb-2">
+            Get a gentle wellness message based on today’s symptoms
+        </p>
+        <button class="btn btn-pink w-100" onclick="getWellnessAI()">
+            Get Wellness Message
+        </button>
+        <div id="wellnessAIResponse" class="mt-3"></div>
+    </div>
+</div>
+
+</body>
+</html>

@@ -36,15 +36,36 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+
+                        // 🔓 Public pages
+                        .requestMatchers(
+                                "/",
+                                "/index",
+                                "/login",
+                                "/register"
+                        ).permitAll()
+
+                        // 🔓 Static resources
+                        .requestMatchers(
+                                "/css/**",
+                                "/js/**",
+                                "/images/**"
+                        ).permitAll()
+
+                        // 🔓 Auth APIs
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/daily-log/**").authenticated()
+
+                        // 🔒 Everything else requires JWT
                         .anyRequest().authenticated()
                 )
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                .sessionManagement(sm ->
+                        sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                );
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
 
 }
