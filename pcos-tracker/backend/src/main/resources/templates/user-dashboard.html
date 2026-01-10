@@ -438,14 +438,31 @@
 
 
                 <div class="summary-row">
-                    <div class="summary-card c1">Period Cycle Length<br><span style="color:var(--muted)">30 days — Normal</span></div>
-                    <div class="summary-card c2">Previous Period<br><span style="color:var(--muted)">5 days — Normal</span></div>
-                    <div class="summary-card c3">Next Period In<br><span style="color:var(--muted)">15 days</span></div>
+                    <div class="summary-card c1">
+                        Period Cycle Length<br>
+                        <span style="color:var(--muted)">
+                            <span id="cycleLength">--</span> days — Normal
+                          </span>
+                    </div>
+                    <div class="summary-card c2">
+                        Previous Period<br>
+                        <span style="color:var(--muted)">
+                        <span id="previousPeriod">--</span> days — Normal
+                      </span>
+                    </div>
+                    <div class="summary-card c3">
+                        Next Period In<br>
+                        <span style="color:var(--muted)">
+                            <span id="nextPeriod">--</span> days
+  </span>
+                    </div>
                 </div>
 
                 <div class="score-box">
                     <div style="display:flex;justify-content:space-between;">
-                        <div><div style="font-weight:700;">Cycle Regularity Score</div><div class="score-big">76%</div></div>
+                        <div class="score-big">
+                            <span id="regularityScore">--</span>%
+                        </div>
                         <div style="color:var(--muted)">Based on last 3 cycles</div>
                     </div>
                 </div>
@@ -483,21 +500,15 @@
         </div>
 
         <!-- ROW 2 -->
-        <div class="area-timeline timeline">
+        <div class="area-timeline timeline" id="cycleHistory">
             <h5>Cycle History Timeline</h5>
-            <strong>Cycle 1:</strong> 30 days<br>
-            <strong>Cycle 2:</strong> 28 days<br>
-            <strong>Cycle 3:</strong> 36 days
         </div>
 
         <div class="area-insights insights">
             <h5>Insights & Recommendations</h5>
-            <ul>
-                <li>Your cycle regularity is improving.</li>
-                <li>Fertile window aligns with symptoms.</li>
-                <li>Walking 20 min improves hormones.</li>
-            </ul>
+            <ul id="insightsList"></ul>
         </div>
+
 
     </div>
 </main>

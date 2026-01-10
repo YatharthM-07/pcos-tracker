@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* ==============================
      AUTH CHECK
-  =============================== */
+  ============================== */
   const token = localStorage.getItem("token");
   if (!token) {
     window.location.replace("/login");
@@ -13,44 +13,46 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* ==============================
-     LOAD USER INFO (Fixes "Hi, User")
-  =============================== */
+     LOAD USER INFO
+  ============================== */
   fetch("/auth/me", {
-    headers: {
-      "Authorization": "Bearer " + token
-    }
+    headers: { Authorization: "Bearer " + token }
   })
-    .then(res => {
-      if (!res.ok) throw new Error("Auth failed");
-      return res.json();
-    })
+    .then(res => res.json())
     .then(user => {
       const usernameEl = document.getElementById("username");
       if (usernameEl && user.name) {
         usernameEl.textContent = `Hi, ${user.name} 🌸`;
       }
     })
-    .catch(err => console.error("User load error:", err));
+    .catch(err => console.error("User load error", err));
 
   /* ==============================
-     CALENDAR SETUP
-  =============================== */
+     DASHBOARD ANALYTICS
+  ============================== */
+  fetch("/analytics/dashboard", {
+    headers: { Authorization: "Bearer " + token }
+  })
+    .then(res => res.json())
+    .then(data => renderDashboardCards(data))
+    .catch(err => console.error("Dashboard error", err));
+
+  /* ==============================
+     CALENDAR (READ-ONLY)
+  ============================== */
   const calGrid = document.getElementById("calendarGrid");
   const monthLbl = document.getElementById("monthLabel");
-  const savePeriodBtn = document.getElementById("savePeriodBtn");
+  const saveBtn = document.getElementById("savePeriodBtn");
 
   let view = new Date();
-  let periodStart = null;
-  let periodEnd = null;
 
-  savePeriodBtn.disabled = true;
-
-  const pad = n => String(n).padStart(2, "0");
-  const todayKey = new Date().toISOString().split("T")[0];
+  if (saveBtn) saveBtn.style.display = "none";
+  calGrid.style.pointerEvents = "none";
 
   function renderCalendar() {
     const y = view.getFullYear();
     const m = view.getMonth();
+    const today = new Date();
 
     monthLbl.textContent = view.toLocaleString("default", {
       month: "long",
@@ -67,17 +69,18 @@ document.addEventListener("DOMContentLoaded", () => {
       const cell = document.createElement("div");
       cell.className = "cal-cell";
 
-      let dateKey = null;
-
       if (i < firstDay) {
         cell.textContent = prevMonthDays - (firstDay - 1 - i);
         cell.classList.add("disabled");
       } else if (i < firstDay + daysInMonth) {
         const day = i - firstDay + 1;
         cell.textContent = day;
-        dateKey = `${y}-${pad(m + 1)}-${pad(day)}`;
 
-        if (dateKey === todayKey) {
+        if (
+          day === today.getDate() &&
+          m === today.getMonth() &&
+          y === today.getFullYear()
+        ) {
           cell.classList.add("today");
         }
       } else {
@@ -94,168 +97,138 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("prevBtn").onclick = () => {
     view = new Date(view.getFullYear(), view.getMonth() - 1, 1);
     renderCalendar();
-    clearSelection();
-    loadSavedPeriods();
+    loadData();
   };
 
   document.getElementById("nextBtn").onclick = () => {
     view = new Date(view.getFullYear(), view.getMonth() + 1, 1);
     renderCalendar();
-    clearSelection();
-    loadSavedPeriods();
+    loadData();
   };
 
   /* ==============================
-     CALENDAR CLICK LOGIC
-  =============================== */
-  calGrid.addEventListener("click", e => {
-    const cell = e.target;
-    if (!cell.classList.contains("cal-cell")) return;
-    if (cell.classList.contains("disabled")) return;
-
-    const day = Number(cell.textContent);
-    const clickedDate = new Date(
-      view.getFullYear(),
-      view.getMonth(),
-      day
-    );
-
-    if (!periodStart) {
-      clearSelection();
-      periodStart = clickedDate;
-      cell.classList.add("period");
-      return;
-    }
-
-    if (periodStart && !periodEnd) {
-      if (clickedDate < periodStart) {
-        clearSelection();
-        periodStart = clickedDate;
-        cell.classList.add("period");
-        return;
-      }
-
-      periodEnd = clickedDate;
-      highlightRange(periodStart, periodEnd);
-      savePeriodBtn.disabled = false;
-      return;
-    }
-
-    clearSelection();
-    periodStart = clickedDate;
-    cell.classList.add("period");
-  });
-
-  function clearSelection() {
-    document.querySelectorAll(".cal-cell.period")
-      .forEach(c => c.classList.remove("period"));
-    periodStart = null;
-    periodEnd = null;
-    savePeriodBtn.disabled = true;
-  }
-
-  function highlightRange(start, end) {
-    document.querySelectorAll(".cal-cell").forEach(cell => {
-      if (cell.classList.contains("disabled")) return;
-
-      const day = Number(cell.textContent);
-      const date = new Date(
-        view.getFullYear(),
-        view.getMonth(),
-        day
-      );
-
-      if (date >= start && date <= end) {
-        cell.classList.add("period");
-      }
-    });
-  }
-
-  /* ==============================
-     LOAD SAVED PERIODS
-  =============================== */
-  function loadSavedPeriods() {
+     LOAD PERIODS + CYCLES
+  ============================== */
+  function loadData() {
     fetch("/cycles/my-periods", {
-      headers: {
-        "Authorization": "Bearer " + token
-      }
+      headers: { Authorization: "Bearer " + token }
     })
       .then(res => res.json())
-      .then(cycles => paintSavedPeriods(cycles))
-      .catch(err => console.error("Failed to load periods", err));
+      .then(periods => paintPeriods(periods))
+      .catch(err => console.error("Period load error", err));
+
+    fetch("/cycles/my-cycles", {
+      headers: { Authorization: "Bearer " + token }
+    })
+      .then(res => res.json())
+      .then(cycles => renderCycleTimeline(cycles))
+      .catch(err => console.error("Cycle load error", err));
   }
 
-  function paintSavedPeriods(cycles) {
-    cycles.forEach(cycle => {
-      const start = new Date(cycle.startDate);
-      const end = new Date(cycle.endDate);
+  function paintPeriods(periods) {
+    document.querySelectorAll(".cal-cell").forEach(c =>
+      c.classList.remove("period")
+    );
+
+    periods.forEach(p => {
+      const start = new Date(p.startDate);
+      const end = new Date(p.endDate);
 
       document.querySelectorAll(".cal-cell").forEach(cell => {
         if (cell.classList.contains("disabled")) return;
 
         const day = Number(cell.textContent);
-        const cellDate = new Date(
-          view.getFullYear(),
-          view.getMonth(),
-          day
-        );
+        const date = new Date(view.getFullYear(), view.getMonth(), day);
 
-        if (cellDate >= start && cellDate <= end) {
+        if (date >= start && date <= end) {
           cell.classList.add("period");
         }
       });
     });
   }
 
-  loadSavedPeriods();
+  /* ==============================
+     CYCLE TIMELINE (LAST 3)
+  ============================== */
+  function renderCycleTimeline(cycles) {
+    const timeline = document.getElementById("cycleHistory");
+    if (!timeline) return;
+
+    timeline.innerHTML = "";
+
+    if (!cycles || cycles.length === 0) {
+      timeline.innerHTML = "<p>No cycle history available.</p>";
+      return;
+    }
+
+    cycles
+      .sort((a, b) => new Date(b.startDate) - new Date(a.startDate))
+      .slice(0, 3)
+      .forEach(c => {
+        const start = new Date(c.startDate);
+        const end = new Date(c.endDate);
+        const p = document.createElement("p");
+        p.innerText = `${start.toDateString()} – ${end.toDateString()} (${c.duration} days)`;
+        timeline.appendChild(p);
+      });
+  }
+
+  loadData();
 
   /* ==============================
-     SAVE PERIOD (UI ONLY)
-  =============================== */
-  savePeriodBtn.addEventListener("click", () => {
-    fetch("/cycles", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
-      },
-      body: JSON.stringify({
-        startDate: formatLocalDate(periodStart),
-        endDate: formatLocalDate(periodEnd)
-      })
-    })
-    .then(res => {
-      if (!res.ok) throw new Error("Save failed");
-      return res.json();
-    })
-    .then(() => {
-      showToast("Period saved successfully 🌸");
-      savePeriodBtn.disabled = true;
-    })
-    .catch(err => {
-      showToast("Failed to save period 😕", true);
-      console.error(err);
-    });
-  });
+     DASHBOARD CARDS
+  ============================== */
+  function renderDashboardCards(data) {
+    const cycleLen = document.getElementById("cycleLength");
+    const prevPeriod = document.getElementById("previousPeriod");
+    const nextPeriod = document.getElementById("nextPeriod");
+    const regEl = document.getElementById("regularityScore");
+    const statusEl = document.getElementById("cycleStatus");
 
+    const avg = data.averageCycleLength;
 
+    if (cycleLen && avg != null) {
+      cycleLen.innerText = `${Math.round(avg)} days`;
+    }
 
-  function showToast(message, isError = false) {
-    const toast = document.getElementById("toast");
-    toast.textContent = message;
-    toast.style.background = isError ? "#e74c3c" : "#2ecc71";
-    toast.style.display = "block";
+    if (statusEl && avg != null) {
+      if (avg >= 26 && avg <= 35) {
+        statusEl.innerText = "Normal";
+        statusEl.style.color = "#2ecc71";
+      } else {
+        statusEl.innerText = "Irregular";
+        statusEl.style.color = "#e74c3c";
+      }
+    }
 
-    setTimeout(() => {
-      toast.style.display = "none";
-    }, 2000);
+    if (prevPeriod) {
+      prevPeriod.innerText =
+        data.previousPeriodLength != null
+          ? `${data.previousPeriodLength} days`
+          : "--";
+    }
+
+    if (nextPeriod) {
+      const n = data.nextPeriodIn;
+      nextPeriod.innerText =
+        n == null ? "--" : n < 0 ? `${Math.abs(n)} overdue` : `${n} days`;
+    }
+
+    if (regEl && data.regularityScore != null) {
+      const r = data.regularityScore;
+      regEl.innerText = r;
+      regEl.style.color =
+        r >= 80 ? "#2ecc71" : r >= 60 ? "#f39c12" : "#e74c3c";
+    }
+
+    const insights = document.getElementById("insightsList");
+    if (insights) {
+      insights.innerHTML = "";
+      (data.insights || []).forEach(t => {
+        const li = document.createElement("li");
+        li.innerText = t;
+        insights.appendChild(li);
+      });
+    }
   }
-function formatLocalDate(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
-
-
 });

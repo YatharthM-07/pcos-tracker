@@ -84,6 +84,21 @@ public class CycleController {
 
         return ResponseEntity.ok(cycles);
     }
+    // ==============================
+// ⭐ GET USER PERIOD HISTORY (Dashboard / Calendar)
+// ==============================
+    @GetMapping("/my-periods")
+    public ResponseEntity<List<PeriodCycle>> getMyPeriods() {
+
+        User currentUser = authContext.getCurrentUser();
+
+        List<PeriodCycle> periods =
+                periodCycleRepository.findByUserIdOrderByStartDateDesc(
+                        currentUser.getId()
+                );
+
+        return ResponseEntity.ok(periods);
+    }
 
     // ==============================
     // ⭐ GET CYCLE BY ID

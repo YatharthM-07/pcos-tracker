@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface PeriodCycleRepository extends JpaRepository<PeriodCycle, Long> {
     List<PeriodCycle> findByUserOrderByStartDateDesc(User user);
+
+    List<PeriodCycle> findByUserIdOrderByStartDateDesc(Long id);
 }
