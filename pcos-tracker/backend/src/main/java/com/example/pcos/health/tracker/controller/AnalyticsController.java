@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @RestController
@@ -30,54 +31,90 @@ public class AnalyticsController {
 
     @GetMapping("/average-cycle-length")
     public double averageCycleLength() {
-        List<Cycle> cycles = cycleRepo.findByUserIdOrderByStartDateDesc(userId());
-        if (cycles.size() < 2) return 0;
+        List<Cycle> cycles = cycleRepo.findByUserIdOrderByStartDateDesc(userId())
+                .stream()
+                .filter(c -> c.getEndDate() != null &&
+                        c.getEndDate().isBefore(LocalDate.now()))
+                .sorted(Comparator.comparing(Cycle::getEndDate).reversed())
+                .toList();
 
-        return cycles.stream().mapToInt(Cycle::getDuration).average().orElse(0);
+        if (cycles.isEmpty()) return 0;
+
+        return cycles.stream()
+                .limit(3) // last 3 completed cycles
+                .mapToInt(Cycle::getDuration)
+                .average()
+                .orElse(0);
+
     }
 
     @GetMapping("/previous-period-length")
     public int previousPeriodLength() {
-        List<Cycle> cycles = cycleRepo.findByUserIdOrderByStartDateDesc(userId());
+        List<Cycle> cycles = cycleRepo.findByUserIdOrderByStartDateDesc(userId())
+                .stream()
+                .filter(c -> c.getEndDate() != null &&
+                        c.getEndDate().isBefore(LocalDate.now()))
+                .sorted(Comparator.comparing(Cycle::getEndDate).reversed())
+                .toList();
+
         if (cycles.isEmpty()) return 0;
 
-        Cycle last = cycles.get(0);
-        if (last.getEndDate() == null) return 0;
+        Cycle lastCompleted = cycles.get(0);
+        return lastCompleted.getDuration();
 
-        return (int) java.time.temporal.ChronoUnit.DAYS.between(
-                last.getStartDate(), last.getEndDate()
-        );
     }
 
     @GetMapping("/next-period-in")
     public long nextPeriodIn() {
-        List<Cycle> cycles = cycleRepo.findByUserIdOrderByStartDateDesc(userId());
+
+        List<Cycle> cycles = cycleRepo.findByUserIdOrderByStartDateDesc(userId())
+                .stream()
+                .filter(c -> c.getEndDate() != null &&
+                        c.getEndDate().isBefore(LocalDate.now()))
+                .sorted(Comparator.comparing(Cycle::getEndDate).reversed())
+                .toList();
+
         if (cycles.isEmpty()) return -1;
 
         double avg = averageCycleLength();
-        if (avg == 0) return -1;
+        if (avg <= 0) return -1;
 
-        Cycle last = cycles.get(0);
-        LocalDate expected = last.getStartDate().plusDays((long) avg);
+        Cycle lastCompleted = cycles.get(0);
 
-        return java.time.temporal.ChronoUnit.DAYS.between(LocalDate.now(), expected);
+        LocalDate predictedNextStart =
+                lastCompleted.getStartDate().plusDays(Math.round(avg));
+
+        return ChronoUnit.DAYS.between(LocalDate.now(), predictedNextStart);
     }
+
 
     @GetMapping("/regularity-score")
     public int regularityScore() {
-        List<Cycle> cycles = cycleRepo.findByUserIdOrderByStartDateDesc(userId());
+        List<Cycle> cycles = cycleRepo.findByUserIdOrderByStartDateDesc(userId())
+                .stream()
+                .filter(c -> c.getEndDate() != null &&
+                        c.getEndDate().isBefore(LocalDate.now()))
+                .sorted(Comparator.comparing(Cycle::getEndDate).reversed())
+                .toList();
+
         if (cycles.size() < 2) return -1;
 
-        double mean = cycles.stream().mapToInt(Cycle::getDuration).average().orElse(0);
+        List<Integer> durations = cycles.stream()
+                .limit(3)
+                .map(Cycle::getDuration)
+                .toList();
+
+        double mean = durations.stream().mapToInt(i -> i).average().orElse(0);
         if (mean == 0) return -1;
 
-        double variance = cycles.stream()
-                .mapToDouble(c -> Math.pow(c.getDuration() - mean, 2))
-                .sum() / cycles.size();
+        double variance = durations.stream()
+                .mapToDouble(d -> Math.pow(d - mean, 2))
+                .average()
+                .orElse(0);
 
         double cv = Math.sqrt(variance) / mean;
-
         return (int) Math.max(0, Math.min(100, (1 - cv) * 100));
+
     }
 
     @GetMapping("/symptoms/most-problematic")

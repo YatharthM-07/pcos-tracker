@@ -129,7 +129,11 @@ document.addEventListener("DOMContentLoaded", () => {
         dateObj = new Date(year, month + 1, d);
       }
 
-      cell.dataset.date = dateObj.toISOString().split("T")[0];
+      const yyyy = dateObj.getFullYear();
+      const mm = String(dateObj.getMonth() + 1).padStart(2, "0");
+      const dd = String(dateObj.getDate()).padStart(2, "0");
+      cell.dataset.date = `${yyyy}-${mm}-${dd}`;
+
       calGrid.appendChild(cell);
     }
 
@@ -143,19 +147,26 @@ document.addEventListener("DOMContentLoaded", () => {
   function paintCycleHistory() {
     const cells = document.querySelectorAll(".cal-cell");
 
-    cells.forEach(c =>
-      c.classList.remove("period", "period-faded")
+    // Clear old highlights
+    cells.forEach(cell =>
+      cell.classList.remove("period", "period-faded")
     );
 
     cachedCycles.forEach(cycle => {
-      const start = cycle.startDate;
-      const end = cycle.endDate;
+      const start = new Date(cycle.startDate);
+      const end = new Date(cycle.endDate);
+
+      // Ignore cycles that don't touch current month
+      if (
+        end < new Date(viewDate.getFullYear(), viewDate.getMonth(), 1) ||
+        start > new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0)
+      ) {
+        return;
+      }
 
       cells.forEach(cell => {
-        const d = cell.dataset.date;
-        if (!d) return;
-
-        if (d >= start && d <= end) {
+        const cellDate = new Date(cell.dataset.date);
+        if (cellDate >= start && cellDate <= end) {
           cell.classList.add(
             cell.classList.contains("disabled")
               ? "period-faded"
@@ -165,6 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
   }
+
 
   /* ==============================
      FETCH CYCLE HISTORY (ONCE)
@@ -205,7 +217,8 @@ document.addEventListener("DOMContentLoaded", () => {
     existing.forEach(e => e.remove());
 
     cycles
-      .sort((a, b) => new Date(b.startDate) - new Date(a.startDate))
+      .filter(c => c.endDate && new Date(c.endDate) < new Date())
+      .sort((a, b) => new Date(b.endDate) - new Date(a.endDate))
       .slice(0, 3)
       .forEach(c => {
         const p = document.createElement("p");
@@ -213,6 +226,7 @@ document.addEventListener("DOMContentLoaded", () => {
         p.innerText = `${c.startDate} – ${c.endDate} (${c.duration} days)`;
         timeline.appendChild(p);
       });
+
   }
 
    ["cramps","acne","mood","bloating","fatigue","headache"].forEach(id => {
@@ -280,10 +294,19 @@ document.addEventListener("DOMContentLoaded", () => {
           .then(res => res.json())
           .then(() => {
             showToast("Daily log saved 🌸");
+
+            // 🔁 Refresh dashboard analytics immediately
+            fetch("/analytics/dashboard", {
+              headers: { Authorization: "Bearer " + token }
+            })
+              .then(res => res.json())
+              .then(data => renderDashboardCards(data));
+
             bootstrap.Modal.getInstance(
               document.getElementById("dailyLogModal")
             ).hide();
           });
+
       });
     }
 
@@ -295,6 +318,7 @@ document.addEventListener("DOMContentLoaded", () => {
       toast.style.display = "block";
       setTimeout(() => (toast.style.display = "none"), 3000);
     }
+
 
   /* ==============================
      DASHBOARD CARDS

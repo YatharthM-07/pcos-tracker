@@ -60,8 +60,12 @@ public class CycleController {
 
         cycle.setUser(currentUser);
 
-        long days = ChronoUnit.DAYS.between(cycle.getStartDate(), cycle.getEndDate());
+        long days = ChronoUnit.DAYS.between(
+                cycle.getStartDate(),
+                cycle.getEndDate()
+        ) + 1;
         cycle.setDuration((int) days);
+
 
         Cycle saved = cycleRepository.save(cycle);
         System.out.println("✅ SAVED CYCLE ID: " + saved.getId());
