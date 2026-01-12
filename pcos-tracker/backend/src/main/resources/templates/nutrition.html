@@ -262,8 +262,8 @@
     <div class="container">
 
         <!-- Logo → Dashboard -->
-        <a class="navbar-brand" href="user-dashboard.html">
-            <img src="../static/images/pcos_logo.png" alt="Maitri logo"/>
+        <a class="navbar-brand" href="/user-dashboard">
+            <img src="/images/pcos_logo.png" alt="Maitri logo"/>
             <span class="brand-name">
                 Ma<span class="i-grad">i</span>tr<span class="i-grad">i</span>
             </span>
@@ -277,31 +277,31 @@
             <div class="nav-icons">
 
                 <!-- Cycle -->
-                <button class="icon-btn" onclick="window.location.href='cycle-tracker.html'">
+                <button class="icon-btn" onclick="window.location.href='/cycle'">
                     <i class="fa-solid fa-droplet"></i>
                     <span class="d-none d-md-inline"> Cycle</span>
                 </button>
 
                 <!-- Symptom -->
-                <button class="icon-btn" onclick="window.location.href='symptom-tracker.html'">
+                <button class="icon-btn" onclick="window.location.href='/symptom'">
                     <i class="fa-solid fa-heart-pulse"></i>
                     <span class="d-none d-md-inline"> Symptom</span>
                 </button>
 
                 <!-- Nutrition -->
-                <button class="icon-btn" onclick="window.location.href='nutrition.html'">
+                <button class="icon-btn" onclick="window.location.href='/nutrition'">
                     <i class="fa-solid fa-utensils"></i>
                     <span class="d-none d-md-inline"> Nutrition</span>
                 </button>
 
                 <!-- Reports -->
-                <button class="icon-btn" onclick="window.location.href='reports.html'">
+                <button class="icon-btn" onclick="window.location.href='/reports'">
                     <i class="fa-solid fa-file-medical"></i>
                     <span class="d-none d-md-inline"> Reports</span>
                 </button>
 
                 <!-- Logout -->
-                <button class="logout" onclick="window.location.href='login.html'">
+                <button class="logout" onclick="window.location.href='/login'">
                     Logout
                 </button>
 
@@ -363,69 +363,106 @@
 
 <!-- JS -->
 <script>
-    // Mock sample data (Replace with backend fetch)
-    let foods = [
-      {name:"Brown Rice", category:"Grain", tag:"GOOD", description:"Low GI and supports insulin sensitivity."},
-      {name:"White Rice", category:"Grain", tag:"AVOID", description:"High GI and spikes blood sugar."},
-      {name:"Almonds", category:"Fruits", tag:"GOOD", description:"Rich in healthy fats and fiber."},
-      {name:"Potato Fries", category:"Snacks", tag:"AVOID", description:"Highly inflammatory and fried."},
-      {name:"Roti (Whole Wheat)", category:"Indian Meal", tag:"GOOD", description:"High fiber alternative to maida products."},
-      {name:"Mango Shake", category:"Beverage", tag:"LIMIT", description:"High natural sugars; consume moderately."}
-    ];
+    let foods = [];
+    let currentFoods = [];
 
-    // Render food list
-    function renderFoods(list){
-      const container = document.getElementById("foodContainer");
-      container.innerHTML = "";
 
-      list.forEach(item => {
-        container.innerHTML += `
-          <div class="col-md-4">
-            <div class="food-card" onclick="openDetail('${item.name}')">
-              <div class="food-name">${item.name}</div>
-              <div class="food-category">${item.category}</div>
-              <div class="food-tag ${item.tag === 'GOOD' ? 'tag-good' : item.tag === 'LIMIT' ? 'tag-limit' : 'tag-avoid'}">${item.tag}</div>
-              <p style="font-size:.9rem;color:#555;margin-top:8px;">${item.description}</p>
-            </div>
-          </div>
-        `;
-      });
+    async function loadAllFoods() {
+  try {
+    const res = await fetch("/food/all");
+    if (!res.ok) {
+      throw new Error("Failed to load foods: " + res.status);
     }
-
-    function searchFood(){
-      const value = document.getElementById("searchInput").value.toLowerCase();
-      const results = foods.filter(f => f.name.toLowerCase().includes(value));
-      renderFoods(results);
-    }
-
-    function filterCategory(cat){
-      renderFoods(foods.filter(f => f.category === cat));
-    }
-
-    function filterTag(tag){
-      renderFoods(foods.filter(f => f.tag === tag));
-    }
-
-    function openDetail(name){
-      const item = foods.find(f => f.name === name);
-      document.getElementById("detailName").textContent = item.name;
-      document.getElementById("detailCategory").textContent = item.category;
-      document.getElementById("detailTag").innerHTML =
-        `<span class="food-tag ${item.tag === 'GOOD' ? 'tag-good' : item.tag === 'LIMIT' ? 'tag-limit' : 'tag-avoid'}">${item.tag}</span>`;
-      document.getElementById("detailDescription").textContent = item.description;
-
-      new bootstrap.Modal(document.getElementById("foodDetailModal")).show();
-    }
-
-    // Initial load
+    foods = await res.json();
     renderFoods(foods);
+
+  } catch (e) {
+    console.error("Failed to load foods", e);
+  }
+}
+
+
+    function renderFoods(list){
+  currentFoods = list;
+  const container = document.getElementById("foodContainer");
+  container.innerHTML = "";
+
+  list.forEach((item, index) => {
+    const tagClass =
+      item.pcosTag === "GOOD" ? "tag-good" :
+      item.pcosTag === "LIMIT" ? "tag-limit" : "tag-avoid";
+
+    container.innerHTML += `
+      <div class="col-md-4">
+        <div class="food-card" onclick="openDetail(${index})">
+          <div class="food-name">${item.name}</div>
+          <div class="food-category">${item.category}</div>
+          <div class="food-tag ${tagClass}">${item.pcosTag}</div>
+          <p style="font-size:.9rem;color:#555;margin-top:8px;">
+            ${item.description || "Healthy choice for PCOS lifestyle."}
+          </p>
+        </div>
+      </div>
+    `;
+  });
+}
+
+
+
+  async function searchFood(){
+    const value = document.getElementById("searchInput").value.trim();
+    if(!value){
+        loadAllFoods();
+        return;
+    }
+
+    const res = await fetch(`/food/search?name=${value}`);
+    const data = await res.json();
+    renderFoods(data);
+    }
+
+
+    async function filterCategory(cat){
+        const res = await fetch(`/food/category?category=${cat}`);
+        renderFoods(await res.json());
+    }
+
+
+    async function filterTag(tag){
+        const res = await fetch(`/food/pcos-tag?tag=${tag}`);
+        renderFoods(await res.json());
+     }
+
+
+    function openDetail(index){
+  const item = currentFoods[index];
+
+  document.getElementById("detailName").textContent = item.name;
+  document.getElementById("detailCategory").textContent = item.category;
+
+  const tagClass =
+    item.pcosTag === "GOOD" ? "tag-good" :
+    item.pcosTag === "LIMIT" ? "tag-limit" : "tag-avoid";
+
+  document.getElementById("detailTag").innerHTML =
+    `<span class="food-tag ${tagClass}">${item.pcosTag}</span>`;
+
+  document.getElementById("detailDescription").textContent =
+    item.description || "No description available.";
+
+  new bootstrap.Modal(document.getElementById("foodDetailModal")).show();
+}
+
+ loadAllFoods();
+
 
     function toggleFoodAI(){
   const popup = document.getElementById("foodAIPopup");
   popup.style.display = popup.style.display === "block" ? "none" : "block";
+
 }
 
-function askFoodAI(){
+async function askFoodAI(){
   const input = document.getElementById("foodAIInput").value.trim();
   const responseBox = document.getElementById("foodAIResponse");
 
@@ -436,12 +473,12 @@ function askFoodAI(){
 
   responseBox.innerHTML = "Maitri AI is thinking… 💭";
 
-  // MOCK RESPONSE (backend later)
-  setTimeout(() => {
-    responseBox.innerHTML =
-      "For PCOS, try whole grains like oats or millets, vegetables like spinach and broccoli, and healthy fats like nuts and seeds. Avoid refined sugar and fried foods 💗";
-  }, 1200);
+  const res = await fetch(`/food/ai?preference=${input}`);
+  const data = await res.json();
+
+  responseBox.innerHTML = data.aiRecommendations;
 }
+
 
 </script>
 

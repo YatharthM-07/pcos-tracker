@@ -46,7 +46,8 @@ public class SecurityConfig {
                                 "/index",
                                 "/login",
                                 "/register",
-                                "/user-dashboard"
+                                "/user-dashboard",
+                                "/nutrition"
                         ).permitAll()
 
                         // ✅ STATIC RESOURCES

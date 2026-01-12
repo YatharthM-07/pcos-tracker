@@ -25,4 +25,10 @@ public class PageController {
     public String dashboard() {
         return "user-dashboard";
     }
+
+    @GetMapping("/nutrition")
+    public String nutrition() {
+        return "nutrition";
+    }
+
 }
