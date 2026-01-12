@@ -366,120 +366,125 @@
     let foods = [];
     let currentFoods = [];
 
-
+    document.addEventListener("DOMContentLoaded", () => {
+      loadAllFoods();
+    });
     async function loadAllFoods() {
-  try {
-    const res = await fetch("/food/all");
-    if (!res.ok) {
-      throw new Error("Failed to load foods: " + res.status);
+      try {
+        const res = await fetch("/food/all");
+
+        if (!res.ok) {
+          throw new Error("Failed to load foods: " + res.status);
+        }
+
+        foods = await res.json();
+        renderFoods(foods);
+
+      } catch (e) {
+        console.error("Failed to load foods", e);
+      }
     }
-    foods = await res.json();
-    renderFoods(foods);
+    function renderFoods(list) {
+      currentFoods = list;
+      const container = document.getElementById("foodContainer");
+      container.innerHTML = "";
 
-  } catch (e) {
-    console.error("Failed to load foods", e);
-  }
-}
+      if (list.length === 0) {
+        container.innerHTML = "<p style='color:#666'>No foods found</p>";
+        return;
+      }
 
+      list.forEach((item, index) => {
+        const tagClass =
+          item.pcosTag === "GOOD" ? "tag-good" :
+          item.pcosTag === "LIMIT" ? "tag-limit" : "tag-avoid";
 
-    function renderFoods(list){
-  currentFoods = list;
-  const container = document.getElementById("foodContainer");
-  container.innerHTML = "";
+        container.innerHTML += `
+          <div class="col-md-4">
+            <div class="food-card" onclick="openDetail(${index})">
+              <div class="food-name">${item.name}</div>
+              <div class="food-category">${item.category}</div>
+              <div class="food-tag ${tagClass}">${item.pcosTag}</div>
+              <p style="font-size:.9rem;color:#555;margin-top:8px;">
+                ${item.description || "Healthy choice for PCOS lifestyle."}
+              </p>
+            </div>
+          </div>
+        `;
+      });
+    }
 
-  list.forEach((item, index) => {
-    const tagClass =
-      item.pcosTag === "GOOD" ? "tag-good" :
-      item.pcosTag === "LIMIT" ? "tag-limit" : "tag-avoid";
+    async function searchFood() {
+      const value = document.getElementById("searchInput").value.trim();
 
-    container.innerHTML += `
-      <div class="col-md-4">
-        <div class="food-card" onclick="openDetail(${index})">
-          <div class="food-name">${item.name}</div>
-          <div class="food-category">${item.category}</div>
-          <div class="food-tag ${tagClass}">${item.pcosTag}</div>
-          <p style="font-size:.9rem;color:#555;margin-top:8px;">
-            ${item.description || "Healthy choice for PCOS lifestyle."}
-          </p>
-        </div>
-      </div>
-    `;
-  });
-}
-
-
-
-  async function searchFood(){
-    const value = document.getElementById("searchInput").value.trim();
-    if(!value){
+      if (!value) {
         loadAllFoods();
         return;
+      }
+
+      const res = await fetch(`/food/search?name=${encodeURIComponent(value)}`);
+      renderFoods(await res.json());
+    }
+    async function filterCategory(category) {
+      const res = await fetch(
+        `/food/category?category=${encodeURIComponent(category)}`
+      );
+      renderFoods(await res.json());
     }
 
-    const res = await fetch(`/food/search?name=${value}`);
-    const data = await res.json();
-    renderFoods(data);
+    async function filterTag(tag) {
+      const res = await fetch(
+        `/food/pcos-tag?tag=${encodeURIComponent(tag)}`
+      );
+      renderFoods(await res.json());
+    }
+
+    function openDetail(index) {
+      const item = currentFoods[index];
+
+      document.getElementById("detailName").textContent = item.name;
+      document.getElementById("detailCategory").textContent = item.category;
+
+      const tagClass =
+        item.pcosTag === "GOOD" ? "tag-good" :
+        item.pcosTag === "LIMIT" ? "tag-limit" : "tag-avoid";
+
+      document.getElementById("detailTag").innerHTML =
+        `<span class="food-tag ${tagClass}">${item.pcosTag}</span>`;
+
+      document.getElementById("detailDescription").textContent =
+        item.description || "No description available.";
+
+      new bootstrap.Modal(
+        document.getElementById("foodDetailModal")
+      ).show();
+    }
+
+    function toggleFoodAI() {
+      const popup = document.getElementById("foodAIPopup");
+      popup.style.display =
+        popup.style.display === "block" ? "none" : "block";
     }
 
 
-    async function filterCategory(cat){
-        const res = await fetch(`/food/category?category=${cat}`);
-        renderFoods(await res.json());
+    async function askFoodAI() {
+      const input = document.getElementById("foodAIInput").value.trim();
+      const responseBox = document.getElementById("foodAIResponse");
+
+      if (!input) {
+        responseBox.innerHTML = "Please tell me what kind of food you want 🌱";
+        return;
+      }
+
+      responseBox.innerHTML = "Maitri AI is thinking… 💭";
+
+      const res = await fetch(
+        `/food/ai?preference=${encodeURIComponent(input)}`
+      );
+      const data = await res.json();
+
+      responseBox.innerHTML = data.aiRecommendations;
     }
-
-
-    async function filterTag(tag){
-        const res = await fetch(`/food/pcos-tag?tag=${tag}`);
-        renderFoods(await res.json());
-     }
-
-
-    function openDetail(index){
-  const item = currentFoods[index];
-
-  document.getElementById("detailName").textContent = item.name;
-  document.getElementById("detailCategory").textContent = item.category;
-
-  const tagClass =
-    item.pcosTag === "GOOD" ? "tag-good" :
-    item.pcosTag === "LIMIT" ? "tag-limit" : "tag-avoid";
-
-  document.getElementById("detailTag").innerHTML =
-    `<span class="food-tag ${tagClass}">${item.pcosTag}</span>`;
-
-  document.getElementById("detailDescription").textContent =
-    item.description || "No description available.";
-
-  new bootstrap.Modal(document.getElementById("foodDetailModal")).show();
-}
-
- loadAllFoods();
-
-
-    function toggleFoodAI(){
-  const popup = document.getElementById("foodAIPopup");
-  popup.style.display = popup.style.display === "block" ? "none" : "block";
-
-}
-
-async function askFoodAI(){
-  const input = document.getElementById("foodAIInput").value.trim();
-  const responseBox = document.getElementById("foodAIResponse");
-
-  if(!input){
-    responseBox.innerHTML = "Please tell me what kind of food you want 🌱";
-    return;
-  }
-
-  responseBox.innerHTML = "Maitri AI is thinking… 💭";
-
-  const res = await fetch(`/food/ai?preference=${input}`);
-  const data = await res.json();
-
-  responseBox.innerHTML = data.aiRecommendations;
-}
-
-
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

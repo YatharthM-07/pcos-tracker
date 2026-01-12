@@ -61,14 +61,15 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
 
                         // 🔒 PROTECTED APIs (JWT REQUIRED)
-                        .requestMatchers(
-                                "/analytics/**",
-                                "/cycles/**",
-                                "/daily-log/**",
-                                "/food/**",
-                                "/reports/**"
-                        ).authenticated()
+                                .requestMatchers(
+                                        "/analytics/**",
+                                        "/cycles/**",
+                                        "/daily-log/**",
+                                        "/reports/**"
+                                ).authenticated()
 
+// ✅ FOOD APIs (TEMP PUBLIC FOR UI)
+                                .requestMatchers("/food/**").permitAll()
                         // 🔒 EVERYTHING ELSE
                         .anyRequest().authenticated()
                 );
