@@ -212,21 +212,25 @@ document.addEventListener("DOMContentLoaded", () => {
     const timeline = document.getElementById("cycleHistory");
     if (!timeline) return;
 
-    // keep existing heading, just append entries
-    const existing = timeline.querySelectorAll(".cycle-entry");
-    existing.forEach(e => e.remove());
+    timeline.querySelectorAll(".cycle-entry").forEach(e => e.remove());
 
     cycles
       .filter(c => c.endDate && new Date(c.endDate) < new Date())
       .sort((a, b) => new Date(b.endDate) - new Date(a.endDate))
       .slice(0, 3)
       .forEach(c => {
+       const days =
+         Math.round(
+           (new Date(c.endDate) - new Date(c.startDate)) /
+           (1000 * 60 * 60 * 24)
+         ) + 1;
+
+
         const p = document.createElement("p");
         p.className = "cycle-entry";
-        p.innerText = `${c.startDate} – ${c.endDate} (${c.duration} days)`;
+        p.innerText = `${c.startDate} – ${c.endDate} (${Math.round(days)})`;
         timeline.appendChild(p);
       });
-
   }
 
    ["cramps","acne","mood","bloating","fatigue","headache"].forEach(id => {
@@ -330,21 +334,41 @@ document.addEventListener("DOMContentLoaded", () => {
     const regEl = document.getElementById("regularityScore");
 
     if (cycleLen && data.averageCycleLength != null) {
-      cycleLen.innerText = Math.round(data.averageCycleLength);
+      cycleLen.innerText = `${data.averageCycleLength} days`;
+      if (data.averageCycleLength > 35) {
+        cycleLen.innerText += " — Irregular";
+      }
+
     }
 
     if (prevPeriod) {
       prevPeriod.innerText =
         data.previousPeriodLength != null
-          ? data.previousPeriodLength
+          ? `${data.previousPeriodLength} days`
           : "--";
-    }
+}
 
-    if (nextPeriod) {
-      const n = data.nextPeriodIn;
-      nextPeriod.innerText =
-        n == null ? "--" : n < 0 ? `${Math.abs(n)} overdue` : n;
-    }
+   if (nextPeriod && data.nextPeriodIn != null) {
+     const n = data.nextPeriodIn;
+
+     const today = new Date();
+     const expectedDate = new Date();
+     expectedDate.setDate(today.getDate() + n);
+
+     const options = { day: "numeric", month: "short" };
+     const formattedDate = expectedDate.toLocaleDateString("en-US", options);
+
+     if (n > 0) {
+       nextPeriod.innerText = `Around ${formattedDate}`;
+     } else if (n === 0) {
+       nextPeriod.innerText = "Expected today";
+     } else {
+       nextPeriod.innerText = `Delayed by ~${Math.abs(n)} days`;
+     }
+   }
+
+
+
 
     if (regEl && data.regularityScore != null) {
       regEl.innerText = data.regularityScore;

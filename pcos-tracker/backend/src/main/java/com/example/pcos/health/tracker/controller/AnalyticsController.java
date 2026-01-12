@@ -30,62 +30,48 @@ public class AnalyticsController {
     }
 
     @GetMapping("/average-cycle-length")
-    public double averageCycleLength() {
-        List<Cycle> cycles = cycleRepo.findByUserIdOrderByStartDateDesc(userId())
-                .stream()
-                .filter(c -> c.getEndDate() != null &&
-                        c.getEndDate().isBefore(LocalDate.now()))
-                .sorted(Comparator.comparing(Cycle::getEndDate).reversed())
-                .toList();
-
+    public long averageCycleLength() {
+        List<Long> cycles = cycleLengthsBetweenPeriods();
         if (cycles.isEmpty()) return 0;
 
-        return cycles.stream()
-                .limit(3) // last 3 completed cycles
-                .mapToInt(Cycle::getDuration)
-                .average()
-                .orElse(0);
-
+        return Math.round(
+                cycles.stream().mapToLong(Long::longValue).average().orElse(0)
+        );
     }
 
     @GetMapping("/previous-period-length")
     public int previousPeriodLength() {
-        List<Cycle> cycles = cycleRepo.findByUserIdOrderByStartDateDesc(userId())
+        return cycleRepo.findByUserIdOrderByStartDateDesc(userId())
                 .stream()
                 .filter(c -> c.getEndDate() != null &&
                         c.getEndDate().isBefore(LocalDate.now()))
-                .sorted(Comparator.comparing(Cycle::getEndDate).reversed())
-                .toList();
-
-        if (cycles.isEmpty()) return 0;
-
-        Cycle lastCompleted = cycles.get(0);
-        return lastCompleted.getDuration();
-
+                .findFirst()
+                .map(c ->
+                        (int) ChronoUnit.DAYS.between(
+                                c.getStartDate(),
+                                c.getEndDate()
+                        ) + 1
+                )
+                .orElse(0);
     }
+
+
+
 
     @GetMapping("/next-period-in")
     public long nextPeriodIn() {
-
-        List<Cycle> cycles = cycleRepo.findByUserIdOrderByStartDateDesc(userId())
-                .stream()
-                .filter(c -> c.getEndDate() != null &&
-                        c.getEndDate().isBefore(LocalDate.now()))
-                .sorted(Comparator.comparing(Cycle::getEndDate).reversed())
-                .toList();
-
+        List<Cycle> cycles = cycleRepo.findByUserIdOrderByStartDateDesc(userId());
         if (cycles.isEmpty()) return -1;
 
-        double avg = averageCycleLength();
-        if (avg <= 0) return -1;
+        long avgCycle = averageCycleLength();
+        if (avgCycle == 0) return -1;
 
-        Cycle lastCompleted = cycles.get(0);
+        LocalDate lastStart = cycles.get(0).getStartDate();
+        LocalDate expectedNext = lastStart.plusDays(avgCycle);
 
-        LocalDate predictedNextStart =
-                lastCompleted.getStartDate().plusDays(Math.round(avg));
-
-        return ChronoUnit.DAYS.between(LocalDate.now(), predictedNextStart);
+        return ChronoUnit.DAYS.between(LocalDate.now(), expectedNext);
     }
+
 
 
     @GetMapping("/regularity-score")
@@ -99,16 +85,12 @@ public class AnalyticsController {
 
         if (cycles.size() < 2) return -1;
 
-        List<Integer> durations = cycles.stream()
-                .limit(3)
-                .map(Cycle::getDuration)
-                .toList();
+        List<Long> lengths = cycleLengthsBetweenPeriods();
+        if (lengths.size() < 2) return -1;
 
-        double mean = durations.stream().mapToInt(i -> i).average().orElse(0);
-        if (mean == 0) return -1;
-
-        double variance = durations.stream()
-                .mapToDouble(d -> Math.pow(d - mean, 2))
+        double mean = lengths.stream().mapToLong(l -> l).average().orElse(0);
+        double variance = lengths.stream()
+                .mapToDouble(l -> Math.pow(l - mean, 2))
                 .average()
                 .orElse(0);
 
@@ -116,6 +98,24 @@ public class AnalyticsController {
         return (int) Math.max(0, Math.min(100, (1 - cv) * 100));
 
     }
+    private List<Long> cycleLengthsBetweenPeriods() {
+        List<Cycle> cycles = cycleRepo.findByUserIdOrderByStartDateDesc(userId());
+
+        if (cycles.size() < 2) return List.of();
+
+        List<Long> lengths = new ArrayList<>();
+
+        for (int i = 0; i < cycles.size() - 1; i++) {
+            LocalDate current = cycles.get(i).getStartDate();
+            LocalDate previous = cycles.get(i + 1).getStartDate();
+
+            long days = ChronoUnit.DAYS.between(previous, current);
+            if (days > 0) lengths.add(days);
+        }
+
+        return lengths;
+    }
+
 
     @GetMapping("/symptoms/most-problematic")
     public Map<String, Object> mostProblematic() {
@@ -176,8 +176,30 @@ public class AnalyticsController {
         else result.add("Your cycles look irregular — keep logging.");
 
         long next = nextPeriodIn();
-        if (next <= 3) result.add("Your next period may start very soon.");
-        else result.add("Your next cycle is expected in " + next + " days.");
+
+        if (next < 0) {
+            result.add(
+                    "Your cycle appears delayed by about " + Math.abs(next) +
+                            " days. Irregular timing is common with PCOS."
+            );
+        }
+        else if (next <= 7) {
+            result.add(
+                    "Your next period may begin soon. Listen to your body and rest if needed."
+            );
+        }
+        else if (next <= 45) {
+            result.add(
+                    "Your next period is likely in about " + next + " days."
+            );
+        }
+        else {
+            result.add(
+                    "Your cycle length is currently longer than average. This can happen with PCOS."
+            );
+        }
+
+
 
         Map<String, Object> most = mostProblematic();
         if (most.containsKey("mostProblematic"))
@@ -190,13 +212,14 @@ public class AnalyticsController {
     @GetMapping("/dashboard")
     public Map<String, Object> dashboard() {
 
+        long avgCycle = averageCycleLength();
+        long next = nextPeriodIn();
+
         return Map.of(
-                "averageCycleLength", averageCycleLength(),
+                "averageCycleLength", avgCycle,
                 "previousPeriodLength", previousPeriodLength(),
-                "nextPeriodIn", nextPeriodIn(),
+                "nextPeriodIn", next,
                 "regularityScore", regularityScore(),
-                "mostProblematicSymptom", mostProblematic(),
-                "wellnessMessage", wellnessMessage().get("message"),
                 "insights", insights()
         );
     }
