@@ -41,7 +41,7 @@ public class DailyLogController {
     }
 
     // -----------------------------------------------------------
-    // 1️⃣ ADD OR UPDATE LOG + WELLNESS AI
+    // 1️⃣ ADD OR UPDATE LOG (ONE PER DAY) + AI
     // -----------------------------------------------------------
     @PostMapping("/add")
     public ResponseEntity<?> addDailyLog(@RequestBody DailyLogPayload payload) {
@@ -52,6 +52,7 @@ public class DailyLogController {
                 ? LocalDate.parse(payload.date)
                 : LocalDate.now();
 
+        // 🔁 Update if exists, else create
         DailySymptom log = dailySymptomRepository
                 .findByUserIdAndDate(currentUser.getId(), logDate);
 
@@ -70,8 +71,13 @@ public class DailyLogController {
 
         dailySymptomRepository.save(log);
 
-        // ⭐ Gemini Wellness AI
         String aiMessage = aiWellnessService.generateWellnessMessage(currentUser.getId());
+
+// ⭐ Store AI message in DB (IMPORTANT)
+        log.setWellnessMessage(aiMessage);
+
+// ⭐ Save (INSERT or UPDATE for the day)
+        dailySymptomRepository.save(log);
 
         return ResponseEntity.ok(Map.of(
                 "message", "Daily log saved successfully",
@@ -81,7 +87,7 @@ public class DailyLogController {
     }
 
     // -----------------------------------------------------------
-    // 2️⃣ Today's log
+    // 2️⃣ TODAY'S LOG (READ ONLY)
     // -----------------------------------------------------------
     @GetMapping("/today")
     public ResponseEntity<?> getTodayLog() {
@@ -93,14 +99,20 @@ public class DailyLogController {
                 .findByUserIdAndDate(currentUser.getId(), today);
 
         if (log == null) {
-            return ResponseEntity.ok(Map.of("message", "No log recorded for today"));
+            return ResponseEntity.ok(Map.of(
+                    "exists", false
+            ));
         }
 
-        return ResponseEntity.ok(log);
+        return ResponseEntity.ok(Map.of(
+                "exists", true,
+                "log", log
+        ));
     }
 
+
     // -----------------------------------------------------------
-    // 3️⃣ Log by date
+    // 3️⃣ LOG BY DATE
     // -----------------------------------------------------------
     @GetMapping("/by-date")
     public ResponseEntity<?> getLogByDate(@RequestParam String date) {
@@ -116,18 +128,20 @@ public class DailyLogController {
             ));
         }
 
-        DailySymptom log = dailySymptomRepository
-                .findByUserIdAndDate(currentUser.getId(), parsedDate);
+        DailySymptom log =
+                dailySymptomRepository.findByUserIdAndDate(currentUser.getId(), parsedDate);
 
         if (log == null) {
-            return ResponseEntity.ok(Map.of("message", "No log found for this date"));
+            return ResponseEntity.ok(Map.of(
+                    "message", "No log found for this date"
+            ));
         }
 
         return ResponseEntity.ok(log);
     }
 
     // -----------------------------------------------------------
-    // 4️⃣ All logs
+    // 4️⃣ ALL LOGS (HISTORY)
     // -----------------------------------------------------------
     @GetMapping("/all")
     public ResponseEntity<?> getAllLogs() {

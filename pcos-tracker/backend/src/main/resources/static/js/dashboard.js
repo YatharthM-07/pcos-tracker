@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
+
   /* ==============================
      LOAD USER INFO
   ============================== */
@@ -23,6 +24,37 @@ document.addEventListener("DOMContentLoaded", () => {
         usernameEl.textContent = `Hi, ${user.name} 🌸`;
       }
     });
+
+    /* ==============================
+       DAILY LOG – LOAD TODAY
+    ============================== */
+    fetch("/daily-log/today", {
+      headers: { Authorization: "Bearer " + token }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.message) return; // no log for today
+
+        const map = {
+          cramps: "cramps",
+          acne: "acne",
+          mood: "mood",
+          bloating: "bloating",
+          fatigue: "fatigue",
+          headache: "headache"
+        };
+
+        Object.keys(map).forEach(key => {
+          const slider = document.getElementById(map[key]);
+          const valueSpan = document.getElementById(`val-${map[key]}`);
+
+          if (slider && data[key] != null) {
+            slider.value = data[key];
+            if (valueSpan) valueSpan.innerText = data[key];
+          }
+        });
+      });
+
 
   /* ==============================
      DASHBOARD ANALYTICS (CARDS)
@@ -104,6 +136,7 @@ document.addEventListener("DOMContentLoaded", () => {
     paintCycleHistory();
   }
 
+
   /* ==============================
      PAINT PERIOD HISTORY (ONLY CLASSES)
   ============================== */
@@ -181,6 +214,87 @@ document.addEventListener("DOMContentLoaded", () => {
         timeline.appendChild(p);
       });
   }
+
+   ["cramps","acne","mood","bloating","fatigue","headache"].forEach(id => {
+      const slider = document.getElementById(id);
+      const valueSpan = document.getElementById(`val-${id}`);
+      if (!slider || !valueSpan) return;
+
+      slider.addEventListener("input", () => {
+        valueSpan.innerText = slider.value;
+      });
+    });
+
+    const saveDailyLogBtn = document.getElementById("saveDailyLog");
+
+    /* ==============================
+       DAILY LOG – LOAD TODAY
+    ============================== */
+
+    const dailyLogModal = document.getElementById("dailyLogModal");
+
+    if (dailyLogModal) {
+      dailyLogModal.addEventListener("show.bs.modal", () => {
+        fetch("/daily-log/today", {
+          headers: { Authorization: "Bearer " + token }
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (!data.exists) return;
+
+            const log = data.log;
+
+            ["cramps","acne","mood","bloating","fatigue","headache"].forEach(id => {
+              const slider = document.getElementById(id);
+              const val = document.getElementById(`val-${id}`);
+              if (slider && log[id] != null) {
+                slider.value = log[id];
+                if (val) val.innerText = log[id];
+              }
+            });
+          });
+      });
+    }
+
+
+    if (saveDailyLogBtn) {
+      saveDailyLogBtn.addEventListener("click", () => {
+        const payload = {
+          date: new Date().toISOString().split("T")[0],
+          cramps: +document.getElementById("cramps").value,
+          acne: +document.getElementById("acne").value,
+          mood: +document.getElementById("mood").value,
+          bloating: +document.getElementById("bloating").value,
+          fatigue: +document.getElementById("fatigue").value,
+          headache: +document.getElementById("headache").value
+        };
+
+        fetch("/daily-log/add", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer " + token
+          },
+          body: JSON.stringify(payload)
+        })
+          .then(res => res.json())
+          .then(() => {
+            showToast("Daily log saved 🌸");
+            bootstrap.Modal.getInstance(
+              document.getElementById("dailyLogModal")
+            ).hide();
+          });
+      });
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      if (!toast) return;
+
+      toast.innerText = message;
+      toast.style.display = "block";
+      setTimeout(() => (toast.style.display = "none"), 3000);
+    }
 
   /* ==============================
      DASHBOARD CARDS
