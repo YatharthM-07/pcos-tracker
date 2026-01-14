@@ -277,6 +277,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (saveDailyLogBtn) {
       saveDailyLogBtn.addEventListener("click", () => {
+
         const payload = {
           date: new Date().toISOString().split("T")[0],
           cramps: +document.getElementById("cramps").value,
@@ -287,6 +288,10 @@ document.addEventListener("DOMContentLoaded", () => {
           headache: +document.getElementById("headache").value
         };
 
+        // 🔒 Buffer state: Saving…
+        saveDailyLogBtn.disabled = true;
+        saveDailyLogBtn.innerText = "Saving…";
+
         fetch("/daily-log/add", {
           method: "POST",
           headers: {
@@ -295,8 +300,13 @@ document.addEventListener("DOMContentLoaded", () => {
           },
           body: JSON.stringify(payload)
         })
-          .then(res => res.json())
+          .then(res => {
+            if (!res.ok) throw new Error("Save failed");
+            return res.json();
+          })
           .then(() => {
+            // ✅ Success state
+            saveDailyLogBtn.innerText = "Saved ✓";
             showToast("Daily log saved 🌸");
 
             // 🔁 Refresh dashboard analytics immediately
@@ -306,11 +316,25 @@ document.addEventListener("DOMContentLoaded", () => {
               .then(res => res.json())
               .then(data => renderDashboardCards(data));
 
-            bootstrap.Modal.getInstance(
-              document.getElementById("dailyLogModal")
-            ).hide();
-          });
+            // ⏱ Reset button after short pause
+            setTimeout(() => {
+              saveDailyLogBtn.disabled = false;
+              saveDailyLogBtn.innerText = "Save Log";
+            }, 1500);
 
+            // Close modal slightly after save feedback
+            setTimeout(() => {
+              bootstrap.Modal.getInstance(
+                document.getElementById("dailyLogModal")
+              ).hide();
+            }, 300);
+          })
+          .catch(() => {
+            // ❌ Error state
+            saveDailyLogBtn.disabled = false;
+            saveDailyLogBtn.innerText = "Save Log";
+            showToast("Could not save log. Please try again 💗");
+          });
       });
     }
 
