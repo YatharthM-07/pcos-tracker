@@ -31,4 +31,9 @@ public class PageController {
         return "nutrition";
     }
 
+    @GetMapping("/cycle-tracker")
+    public String cycleTracker() {
+        return "cycle-tracker"; // templates/cycle-tracker.html
+    }
 }
+

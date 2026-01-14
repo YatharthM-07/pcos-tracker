@@ -1,18 +1,18 @@
 package com.example.pcos.health.tracker.controller;
 
 import com.example.pcos.health.tracker.dto.PeriodRequest;
+import com.example.pcos.health.tracker.dto.CycleRequest;
 import com.example.pcos.health.tracker.entity.Cycle;
 import com.example.pcos.health.tracker.entity.PeriodCycle;
 import com.example.pcos.health.tracker.entity.User;
-import com.example.pcos.health.tracker.repository.CycleRepository;
 import com.example.pcos.health.tracker.repository.PeriodCycleRepository;
 import com.example.pcos.health.tracker.security.AuthContext;
+import com.example.pcos.health.tracker.service.CycleService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @RestController
@@ -20,7 +20,7 @@ import java.util.List;
 public class CycleController {
 
     @Autowired
-    private CycleRepository cycleRepository;
+    private CycleService cycleService;
 
     @Autowired
     private PeriodCycleRepository periodCycleRepository;
@@ -28,9 +28,9 @@ public class CycleController {
     @Autowired
     private AuthContext authContext;
 
-    // ==============================
-    // ⭐ SAVE PERIOD (Start + End)
-    // ==============================
+    // =================================================
+    // ⭐ SAVE PERIOD (Bleeding Days)
+    // =================================================
     @PostMapping("/period")
     public ResponseEntity<?> savePeriod(@RequestBody PeriodRequest request) {
 
@@ -46,51 +46,41 @@ public class CycleController {
         return ResponseEntity.ok("Period saved successfully");
     }
 
-    // ==============================
-    // ⭐ CREATE A CYCLE
-    // ==============================
+    // =================================================
+    // ⭐ CREATE A CYCLE (Calendar Range Save)
+    // =================================================
     @PostMapping
-    public ResponseEntity<?> createCycle(@RequestBody Cycle cycle) {
-
-        System.out.println(" CREATE CYCLE API HIT");
-        System.out.println("Incoming payload: " + cycle);
-
+    public ResponseEntity<Cycle> createCycle(
+            @RequestBody CycleRequest request
+    ) {
         User currentUser = authContext.getCurrentUser();
-        System.out.println("Current user: " + currentUser.getEmail());
 
-        cycle.setUser(currentUser);
+        Cycle savedCycle = cycleService.createCycle(
+                request.getStartDate(),
+                request.getEndDate(),
+                currentUser
+        );
 
-        long days = ChronoUnit.DAYS.between(
-                cycle.getStartDate(),
-                cycle.getEndDate()
-        ) + 1;
-        cycle.setDuration((int) days);
-
-
-        Cycle saved = cycleRepository.save(cycle);
-        System.out.println("✅ SAVED CYCLE ID: " + saved.getId());
-
-        return ResponseEntity.ok(saved);
+        return ResponseEntity.ok(savedCycle);
     }
 
-    // ==============================
-    // ⭐ GET USER CYCLES
-    // ==============================
+    // =================================================
+    // ⭐ GET LOGGED-IN USER CYCLES
+    // =================================================
     @GetMapping("/my-cycles")
     public ResponseEntity<List<Cycle>> getMyCycles() {
 
         User currentUser = authContext.getCurrentUser();
 
         List<Cycle> cycles =
-                cycleRepository.findByUserIdOrderByStartDateDesc(
-                        currentUser.getId()
-                );
+                cycleService.getUserCycles(currentUser.getId());
 
         return ResponseEntity.ok(cycles);
     }
-    // ==============================
-// ⭐ GET USER PERIOD HISTORY (Dashboard / Calendar)
-// ==============================
+
+    // =================================================
+    // ⭐ GET USER PERIOD HISTORY (Calendar Highlight)
+    // =================================================
     @GetMapping("/my-periods")
     public ResponseEntity<List<PeriodCycle>> getMyPeriods() {
 
@@ -104,42 +94,32 @@ public class CycleController {
         return ResponseEntity.ok(periods);
     }
 
-    // ==============================
-    // ⭐ GET CYCLE BY ID
-    // ==============================
+    // =================================================
+    // ⭐ GET CYCLE BY ID (Ownership Protected)
+    // =================================================
     @GetMapping("/{id}")
     public ResponseEntity<?> getCycleById(@PathVariable Long id) {
 
         User currentUser = authContext.getCurrentUser();
 
-        return cycleRepository.findById(id)
-                .map(cycle -> {
-                    if (!cycle.getUser().getId().equals(currentUser.getId())) {
-                        return ResponseEntity.status(403).body("Access denied");
-                    }
-                    return ResponseEntity.ok(cycle);
-                })
-                .orElse(ResponseEntity.notFound().build());
+        return cycleService.getCycleById(id, currentUser);
     }
 
-    // ==============================
-    // ⭐ DELETE CYCLE
-    // ==============================
+    // =================================================
+    // ⭐ DELETE CYCLE (Ownership Protected)
+    // =================================================
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteCycle(@PathVariable Long id) {
 
         User currentUser = authContext.getCurrentUser();
 
-        return cycleRepository.findById(id)
-                .map(cycle -> {
-                    if (!cycle.getUser().getId().equals(currentUser.getId())) {
-                        return ResponseEntity.status(403)
-                                .body("You cannot delete another user's data");
-                    }
+        boolean deleted = cycleService.deleteCycle(id, currentUser);
 
-                    cycleRepository.delete(cycle);
-                    return ResponseEntity.ok("Cycle deleted successfully");
-                })
-                .orElse(ResponseEntity.notFound().build());
+        if (!deleted) {
+            return ResponseEntity.status(403)
+                    .body("You cannot delete another user's data");
+        }
+
+        return ResponseEntity.ok("Cycle deleted successfully");
     }
 }

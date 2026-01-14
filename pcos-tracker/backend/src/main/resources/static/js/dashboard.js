@@ -356,56 +356,91 @@ document.addEventListener("DOMContentLoaded", () => {
     const prevPeriod = document.getElementById("previousPeriod");
     const nextPeriod = document.getElementById("nextPeriod");
     const regEl = document.getElementById("regularityScore");
+    const insights = document.getElementById("insightsList");
 
-    if (cycleLen && data.averageCycleLength != null) {
-      cycleLen.innerText = `${data.averageCycleLength} days`;
-      if (data.averageCycleLength > 35) {
-        cycleLen.innerText += " — Irregular";
+    /* ==============================
+       PERIOD CYCLE LENGTH
+    ============================== */
+    if (cycleLen) {
+      if (data.averageCycleLength != null) {
+        cycleLen.innerText = `${data.averageCycleLength} days`;
+
+        if (data.averageCycleLength > 35) {
+          cycleLen.innerText += " — Irregular";
+        } else if (data.averageCycleLength < 21) {
+          cycleLen.innerText += " — Short";
+        }
+      } else {
+        cycleLen.innerText = "--";
       }
-
     }
 
+    /* ==============================
+       PREVIOUS PERIOD
+    ============================== */
     if (prevPeriod) {
       prevPeriod.innerText =
         data.previousPeriodLength != null
           ? `${data.previousPeriodLength} days`
           : "--";
-}
-
-   if (nextPeriod && data.nextPeriodIn != null) {
-     const n = data.nextPeriodIn;
-
-     const today = new Date();
-     const expectedDate = new Date();
-     expectedDate.setDate(today.getDate() + n);
-
-     const options = { day: "numeric", month: "short" };
-     const formattedDate = expectedDate.toLocaleDateString("en-US", options);
-
-     if (n > 0) {
-       nextPeriod.innerText = `Around ${formattedDate}`;
-     } else if (n === 0) {
-       nextPeriod.innerText = "Expected today";
-     } else {
-       nextPeriod.innerText = `Delayed by ~${Math.abs(n)} days`;
-     }
-   }
-
-
-
-
-    if (regEl && data.regularityScore != null) {
-      regEl.innerText = data.regularityScore;
     }
 
-    const insights = document.getElementById("insightsList");
+    /* ==============================
+       NEXT PERIOD (FIXED & SMART)
+    ============================== */
+    if (nextPeriod) {
+      if (data.nextPeriodIn != null) {
+        const n = data.nextPeriodIn;
+
+        const today = new Date();
+        const expectedDate = new Date();
+        expectedDate.setDate(today.getDate() + n);
+
+        const options = { day: "numeric", month: "short" };
+        const formattedDate = expectedDate.toLocaleDateString("en-US", options);
+
+        if (n > 0) {
+          nextPeriod.innerText = `Around ${formattedDate}`;
+        } else if (n === 0) {
+          nextPeriod.innerText = "Expected today";
+        } else {
+          nextPeriod.innerText = `Delayed by ~${Math.abs(n)} days`;
+        }
+      } else {
+        nextPeriod.innerText = "--";
+      }
+    }
+
+    /* ==============================
+       REGULARITY SCORE
+    ============================== */
+    if (regEl) {
+      if (data.regularityScore != null) {
+        regEl.innerText = `${data.regularityScore}%`;
+      } else {
+        regEl.innerText = "--";
+      }
+    }
+
+    /* ==============================
+       INSIGHTS (DYNAMIC, AFTER SAVE)
+    ============================== */
     if (insights) {
       insights.innerHTML = "";
-      (data.insights || []).forEach(t => {
+
+      if (Array.isArray(data.insights) && data.insights.length > 0) {
+        data.insights.forEach(text => {
+          const li = document.createElement("li");
+          li.innerText = text;
+          insights.appendChild(li);
+        });
+      } else {
+        // sensible fallback
         const li = document.createElement("li");
-        li.innerText = t;
+        li.innerText = "Log more cycles to unlock personalized insights.";
         insights.appendChild(li);
-      });
+      }
     }
   }
+
 });

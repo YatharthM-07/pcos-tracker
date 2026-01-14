@@ -188,6 +188,31 @@
           border-radius:10px;
           color:#6b0d12;
         }
+        .save-period-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px 0;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #F37A7A, #ff9aa2);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.save-period-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(243, 122, 122, 0.35);
+}
+
+.save-period-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
 
         /* RIGHT COLUMN */
         .section-card{
@@ -230,6 +255,30 @@
         .insights ul{
           margin-left:18px;margin-top:10px;color:var(--muted);
         }
+
+                    /* TOAST MESSAGE */
+            .toast-msg {
+              position: fixed;
+              bottom: 24px;
+              right: 24px;
+              background: #F37A7A;
+              color: white;
+              padding: 12px 18px;
+              border-radius: 12px;
+              font-weight: 600;
+              box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+              display: none;
+              z-index: 2000;
+              animation: fadeInOut 2.5s ease;
+            }
+
+            @keyframes fadeInOut {
+              0% { opacity: 0; transform: translateY(8px); }
+              10% { opacity: 1; transform: translateY(0); }
+              90% { opacity: 1; }
+              100% { opacity: 0; transform: translateY(8px); }
+            }
+
     </style>
 </head>
 
@@ -241,7 +290,7 @@
 
         <!-- Logo → Dashboard -->
         <a class="navbar-brand" href="user-dashboard.html">
-            <img src="../static/images/pcos_logo.png" alt="Maitri logo"/>
+            <img src="/images/pcos_logo.png" alt="Maitri logo"/>
             <span class="brand-name">
                 Ma<span class="i-grad">i</span>tr<span class="i-grad">i</span>
             </span>
@@ -255,7 +304,7 @@
             <div class="nav-icons">
 
                 <!-- Cycle -->
-                <button class="icon-btn" onclick="window.location.href='cycle-tracker.html'">
+                <button class="icon-btn" onclick="window.location.href='/cycle-tracker'">
                     <i class="fa-solid fa-droplet"></i>
                     <span class="d-none d-md-inline"> Cycle</span>
                 </button>
@@ -311,6 +360,9 @@
                 <p style="font-size:.9rem; margin-top:16px; color:var(--muted);">
                     Tap once to select <b>start</b>. Tap again to select <b>end</b>.
                 </p>
+                <button id="savePeriodBtn" class="save-period-btn">
+                    Save Period
+                </button>
             </div>
 
             <!-- LAST CYCLE CARD -->
@@ -373,11 +425,7 @@
             <!-- INSIGHTS -->
             <div class="section-card insights">
                 <h5 style="font-weight:700;">Insights & Recommendations</h5>
-                <ul>
-                    <li>Your recent cycles show stable patterns.</li>
-                    <li>Average cycle length remains steady at ~28 days.</li>
-                    <li>Moderate exercise helps reduce severity of symptoms.</li>
-                </ul>
+                <ul id="insightsList"></ul>
             </div>
 
         </div>
@@ -386,208 +434,7 @@
 </div>
 
 <!-- JS -->
-<script>
-    /* ===== Helpers ===== */
-    const pad=n=>String(n).padStart(2,"0");
-
-    /* Track selections */
-    let viewDate=new Date();
-    let startSel=null, endSel=null;
-
-    const grid=document.getElementById("calendarGrid");
-    const monthLabel=document.getElementById("monthLabel");
-
-    /* ===== Render Calendar ===== */
-    function renderCalendar(){
-      const y=viewDate.getFullYear();
-      const m=viewDate.getMonth();
-      const first=new Date(y,m,1).getDay();
-      const days=new Date(y,m+1,0).getDate();
-      const prevDays=new Date(y,m,0).getDate();
-
-      monthLabel.textContent=viewDate.toLocaleString("default",{month:"long",year:"numeric"});
-      grid.innerHTML="";
-
-      let cells=[];
-
-      for(let i=0;i<42;i++){
-        const cell=document.createElement("div");
-        cell.className="cal-cell";
-
-        if(i<first){
-          cell.textContent = prevDays-(first-1-i);
-          cell.classList.add("disabled");
-        }
-        else if(i<first+days){
-          const d=i-first+1;
-          const iso=`${y}-${pad(m+1)}-${pad(d)}`;
-          cell.textContent=d;
-
-          const today=new Date();
-          const todayISO=`${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
-          if(iso===todayISO) cell.classList.add("today");
-
-          cell.onclick=()=>handleClick(iso);
-
-          cells.push({iso,el:cell});
-        }
-        else{
-          cell.textContent=i-first-days+1;
-          cell.classList.add("disabled");
-        }
-
-        grid.appendChild(cell);
-      }
-
-      applyRange(cells);
-    }
-
-    /* Handle date selection */
-    function handleClick(date){
-      if(!startSel){
-        startSel=date;
-      }
-      else if(startSel && !endSel){
-        endSel=date;
-        saveCycle(startSel,endSel);
-      }
-      else{
-        startSel=date;
-        endSel=null;
-      }
-      renderCalendar();
-    }
-
-    /* Highlight selected range */
-    function applyRange(cells){
-      if(!startSel) return;
-
-      const s=new Date(startSel);
-      const startCell=cells.find(c=>c.iso===startSel);
-      if(startCell) startCell.el.classList.add("start");
-
-      if(endSel){
-        const e=new Date(endSel);
-        const endCell=cells.find(c=>c.iso===endSel);
-        if(endCell) endCell.el.classList.add("end");
-
-        let [min,max]=s<e?[s,e]:[e,s];
-
-        cells.forEach(c=>{
-          const cur=new Date(c.iso);
-          if(cur>min && cur<max){
-            c.el.classList.add("inrange");
-          }
-        });
-      }
-    }
-
-    /* ===== Save cycles ===== */
-    function saveCycle(start,end){
-      let history = JSON.parse(localStorage.getItem("maitri_cycles")||"[]");
-
-      history.unshift({start,end});
-      localStorage.setItem("maitri_cycles",JSON.stringify(history));
-
-      updateTimeline();
-      updateLastCycleCard();
-      updateSummaryCards();
-    }
-
-    function fmt(date){
-      const d=new Date(date);
-      return d.toLocaleString("default",{month:"short",day:"numeric"});
-    }
-
-    /* ===== Timeline (with dropdown) ===== */
-    function updateTimeline(){
-      const box=document.getElementById("timelineBox");
-      const selector=document.getElementById("timelineCount");
-
-      let history = JSON.parse(localStorage.getItem("maitri_cycles")||"[]");
-      const count=parseInt(selector.value);
-
-      const sliced = history.slice(0,count);
-
-      box.innerHTML="";
-
-      sliced.forEach(c=>{
-        const s=new Date(c.start);
-        const e=new Date(c.end);
-        const diff=Math.round((e-s)/(1000*60*60*24))+1;
-
-        box.innerHTML += `
-            <div class="timeline-line">
-                ${fmt(c.start)} → ${fmt(c.end)} — ${diff} days
-            </div>
-        `;
-      });
-    }
-
-    document.getElementById("timelineCount").addEventListener("change",updateTimeline);
-
-    /* ===== Last Cycle Card ===== */
-    function updateLastCycleCard(){
-      const card=document.getElementById("lastCycleCard");
-      const txt=document.getElementById("lastCycleText");
-
-      let history = JSON.parse(localStorage.getItem("maitri_cycles")||"[]");
-      if(history.length===0){
-        card.style.display="none";
-        return;
-      }
-
-      const c=history[0];
-      const s=new Date(c.start);
-      const e=new Date(c.end);
-      const diff=Math.round((e-s)/(1000*60*60*24))+1;
-
-      txt.innerHTML = `${fmt(c.start)} – ${fmt(c.end)} (${diff} days)`;
-      card.style.display="block";
-    }
-
-    /* ===== Summary Cards ===== */
-    function updateSummaryCards(){
-      let history = JSON.parse(localStorage.getItem("maitri_cycles")||"[]");
-
-      if(history.length===0) return;
-
-      const latest=history[0];
-      const s=new Date(latest.start);
-      const e=new Date(latest.end);
-      const diff=Math.round((e-s)/(1000*60*60*24))+1;
-
-      document.getElementById("cycle-length").textContent = diff+" days";
-
-      if(history.length>1){
-        const prev=history[1];
-        const ps=new Date(prev.start);
-        const pe=new Date(prev.end);
-        const pdiff=Math.round((pe-ps)/(1000*60*60*24))+1;
-
-        document.getElementById("prev-length").textContent = pdiff+" days";
-      }
-
-      document.getElementById("next-in").textContent="—";
-      document.getElementById("reg-score").textContent="84%";
-    }
-
-    /* Navigation */
-    document.getElementById("prevMonth").onclick=()=>{
-      viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()-1,1);
-      renderCalendar();
-    };
-    document.getElementById("nextMonth").onclick=()=>{
-      viewDate=new Date(viewDate.getFullYear(),viewDate.getMonth()+1,1);
-      renderCalendar();
-    };
-
-    /* INIT */
-    renderCalendar();
-    updateTimeline();
-    updateLastCycleCard();
-    updateSummaryCards();
-</script>
+<script src="/js/cycle-tracker.js"></script>
 
 </body>
 </html>

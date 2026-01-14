@@ -62,11 +62,15 @@ public class SecurityConfig {
 
                         // 🔒 PROTECTED APIs (JWT REQUIRED)
                                 .requestMatchers(
-                                        "/analytics/**",
-                                        "/cycles/**",
-                                        "/daily-log/**",
-                                        "/reports/**"
-                                ).authenticated()
+                                        "/",
+                                        "/index",
+                                        "/login",
+                                        "/register",
+                                        "/user-dashboard",
+                                        "/cycle-tracker",   // ✅ ADD THIS
+                                        "/nutrition"
+                                ).permitAll()
+
 
 // ✅ FOOD APIs (TEMP PUBLIC FOR UI)
                                 .requestMatchers("/food/**").permitAll()
