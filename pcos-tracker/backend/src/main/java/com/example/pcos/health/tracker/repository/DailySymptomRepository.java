@@ -17,4 +17,5 @@ public interface DailySymptomRepository extends JpaRepository<DailySymptom, Long
     DailySymptom findTopByUserIdOrderByDateDesc(Long userId);
     List<DailySymptom> findByUserIdOrderByDateDesc(Long userId);
 
+    List<DailySymptom> findByUserIdAndDateAfterOrderByDateAsc(Long userId, LocalDate startDate);
 }

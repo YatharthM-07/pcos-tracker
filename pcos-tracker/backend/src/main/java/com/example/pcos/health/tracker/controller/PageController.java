@@ -35,5 +35,10 @@ public class PageController {
     public String cycleTracker() {
         return "cycle-tracker"; // templates/cycle-tracker.html
     }
+    @GetMapping("/symptom-tracker")
+    public String symptomTracker() {
+        return "symptom-tracker";
+    }
+
 }
 

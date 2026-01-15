@@ -35,45 +35,47 @@ public class SecurityConfig {
 
         http
                 .csrf(csrf -> csrf.disable())
-                .sessionManagement(sm ->
-                        sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
 
-                        // ✅ PUBLIC HTML PAGES
+                        // 🌐 PUBLIC PAGES (HTML)
                         .requestMatchers(
                                 "/",
                                 "/index",
                                 "/login",
                                 "/register",
                                 "/user-dashboard",
-                                "/nutrition"
+                                "/cycle-tracker",
+                                "/symptom-tracker",
+                                "/nutrition",
+                                "/reports"
                         ).permitAll()
 
-                        // ✅ STATIC RESOURCES
+                        // 🌐 STATIC FILES
                         .requestMatchers(
                                 "/css/**",
                                 "/js/**",
-                                "/images/**"
+                                "/images/**",
+                                "/static/**"
                         ).permitAll()
 
-                        // ✅ AUTH APIs
+                        // 🔓 AUTH
                         .requestMatchers("/auth/**").permitAll()
 
                         // 🔒 PROTECTED APIs (JWT REQUIRED)
-                                .requestMatchers(
-                                        "/",
-                                        "/index",
-                                        "/login",
-                                        "/register",
-                                        "/user-dashboard",
-                                        "/cycle-tracker",   // ✅ ADD THIS
-                                        "/nutrition"
-                                ).permitAll()
+                        .requestMatchers(
+                                "/analytics/**",
+                                "/daily-log/**",
+                                "/cycle/**",
+                                "/reports/**",
+                                "/symptoms/**"
+                        ).authenticated()
 
+                        // 🟡 FOOD (TEMP public – OK for now)
+                        .requestMatchers("/food/**").permitAll()
 
-// ✅ FOOD APIs (TEMP PUBLIC FOR UI)
-                                .requestMatchers("/food/**").permitAll()
                         // 🔒 EVERYTHING ELSE
                         .anyRequest().authenticated()
                 );
@@ -82,6 +84,7 @@ public class SecurityConfig {
 
         return http.build();
     }
+
 
 
 
