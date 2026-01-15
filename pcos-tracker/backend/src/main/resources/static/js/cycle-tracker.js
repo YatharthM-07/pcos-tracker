@@ -1,10 +1,9 @@
 document.addEventListener("DOMContentLoaded", () => {
 
   /* ==============================
-     AUTH CHECK (FIXED LOCATION)
+     AUTH CHECK
   ============================== */
   const token = localStorage.getItem("token");
-
   if (!token) {
     window.location.replace("/login");
     return;
@@ -38,10 +37,8 @@ document.addEventListener("DOMContentLoaded", () => {
         headers: { Authorization: "Bearer " + token }
       });
       backendCycles = await res.json();
-
       renderCalendar();
       updateTimeline();
-      updateSummaryCards();
     } catch (err) {
       console.error("Failed to load cycles", err);
     }
@@ -53,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
         headers: { Authorization: "Bearer " + token }
       });
       backendPeriods = await res.json();
-      renderCalendar();
+      requestAnimationFrame(renderCalendar);
     } catch (err) {
       console.error("Failed to load periods", err);
     }
@@ -96,7 +93,11 @@ document.addEventListener("DOMContentLoaded", () => {
         dateObj = new Date(y, m, d);
 
         const today = new Date();
-        if (d === today.getDate() && m === today.getMonth() && y === today.getFullYear()) {
+        if (
+          d === today.getDate() &&
+          m === today.getMonth() &&
+          y === today.getFullYear()
+        ) {
           cell.classList.add("today");
         }
 
@@ -136,14 +137,41 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* ==============================
-     PAINTING LOGIC
+     PERIOD HIGHLIGHT (CURRENT + PREVIOUS)
   ============================== */
   function paintPeriods(cells) {
+    if (!backendPeriods || backendPeriods.length === 0) return;
+
+    // backend already sends DESC → trust it
+    const current = backendPeriods[0];
+    const previous = backendPeriods.length > 1 ? backendPeriods[1] : null;
+
     cells.forEach(c => {
-      if (isPeriodDay(c.iso)) c.el.classList.add("period");
+      const d = new Date(c.iso);
+
+      // ✅ Latest period (always paint)
+      if (
+        current &&
+        d >= new Date(current.startDate) &&
+        d <= new Date(current.endDate)
+      ) {
+        c.el.classList.add("period-current");
+      }
+
+      // ✅ Previous period (light shade)
+      if (
+        previous &&
+        d >= new Date(previous.startDate) &&
+        d <= new Date(previous.endDate)
+      ) {
+        c.el.classList.add("period-previous");
+      }
     });
   }
 
+  /* ==============================
+     RANGE SELECTION
+  ============================== */
   function paintCycleRange(cells) {
     if (!startSel) return;
 
@@ -161,13 +189,6 @@ document.addEventListener("DOMContentLoaded", () => {
     cells.forEach(c => {
       const cur = new Date(c.iso);
       if (cur > min && cur < max) c.el.classList.add("inrange");
-    });
-  }
-
-  function isPeriodDay(iso) {
-    return backendPeriods.some(p => {
-      const d = new Date(iso);
-      return d >= new Date(p.startDate) && d <= new Date(p.endDate);
     });
   }
 
@@ -209,7 +230,6 @@ document.addEventListener("DOMContentLoaded", () => {
         await loadPeriodsFromBackend();
         await refreshAnalytics();
 
-
         savePeriodBtn.innerText = "Saved ✓";
         showToast("Period saved successfully 🌸");
 
@@ -225,95 +245,85 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-
+  /* ==============================
+     DASHBOARD CARDS & INSIGHTS
+  ============================== */
   function renderDashboardCards(data) {
 
-    // Top 3 cards
     const cycleLen = document.getElementById("cycle-length");
     const prevLen = document.getElementById("prev-length");
     const nextIn = document.getElementById("next-in");
     const regScore = document.getElementById("reg-score");
 
-    if (cycleLen && data.averageCycleLength != null) {
-      cycleLen.innerText = `${data.averageCycleLength} days`;
+    cycleLen.innerText =
+      data.averageCycleLength != null ? `${data.averageCycleLength} days` : "—";
+
+    prevLen.innerText =
+      data.previousPeriodLength != null
+        ? `${data.previousPeriodLength} days`
+        : "First cycle";
+
+    if (data.nextPeriodIn == null) {
+      nextIn.innerText = "Prediction pending";
+    } else if (data.nextPeriodIn > 0) {
+      nextIn.innerText = `${data.nextPeriodIn} days`;
+    } else if (data.nextPeriodIn === 0) {
+      nextIn.innerText = "Expected today";
+    } else {
+      nextIn.innerText = `Late by ${Math.abs(data.nextPeriodIn)} days`;
     }
 
-    if (prevLen && data.previousPeriodLength != null) {
-      prevLen.innerText = `${data.previousPeriodLength} days`;
+    regScore.innerText =
+      data.regularityScore != null ? `${data.regularityScore}%` : "—";
+
+    const insights = document.getElementById("insightsList");
+    insights.innerHTML = "";
+
+    if (!data.averageCycleLength) {
+      insights.innerHTML =
+        "<li>Log your first cycle to start seeing insights.</li>";
+      return;
     }
 
-    if (nextIn) {
-      if (data.nextPeriodIn == null) {
-        nextIn.innerText = "—";
-      } else if (data.nextPeriodIn > 0) {
-        nextIn.innerText = `${data.nextPeriodIn} days`;
-      } else if (data.nextPeriodIn === 0) {
-        nextIn.innerText = "Today";
-      } else {
-        nextIn.innerText = `Late by ${Math.abs(data.nextPeriodIn)} days`;
-      }
+    insights.innerHTML += `<li>Your average cycle length is ${data.averageCycleLength} days.</li>`;
+
+    if (data.regularityScore >= 80) {
+      insights.innerHTML += "<li>Your cycle pattern appears regular.</li>";
+    } else if (data.regularityScore >= 50) {
+      insights.innerHTML += "<li>Your cycle shows mild variation.</li>";
+    } else {
+      insights.innerHTML += "<li>Your cycle is irregular.</li>";
     }
 
-    if (regScore && data.regularityScore != null) {
-      regScore.innerText = `${data.regularityScore}%`;
+    if (data.previousPeriodLength != null) {
+      insights.innerHTML += `<li>Your last period lasted ${data.previousPeriodLength} days.</li>`;
     }
 
-    // Insights list
-    const insightsEl = document.getElementById("insightsList");
-    if (insightsEl) {
-      insightsEl.innerHTML = "";
-      (data.insights || []).forEach(text => {
-        const li = document.createElement("li");
-        li.innerText = text;
-        insightsEl.appendChild(li);
-      });
-    }
+    insights.innerHTML += "<li>Continue logging to improve predictions.</li>";
   }
 
   async function refreshAnalytics() {
-    try {
-      const res = await fetch("/analytics/dashboard", {
-        headers: {
-          "Authorization": "Bearer " + token
-        }
-      });
-
-      if (!res.ok) throw new Error("Analytics fetch failed");
-
-      const data = await res.json();
-      renderDashboardCards(data);
-
-    } catch (err) {
-      console.error("Failed to refresh analytics", err);
-    }
+    const res = await fetch("/analytics/dashboard", {
+      headers: { Authorization: "Bearer " + token }
+    });
+    const data = await res.json();
+    renderDashboardCards(data);
   }
 
-
-
   /* ==============================
-     TIMELINE & SUMMARY
+     TIMELINE
   ============================== */
   function updateTimeline() {
     if (!timelineBox) return;
     timelineBox.innerHTML = "";
-    backendCycles.slice(0, parseInt(timelineCount.value)).forEach(c => {
-      timelineBox.innerHTML += `
-        <div class="timeline-line">
-          ${fmt(c.startDate)} → ${fmt(c.endDate)} — ${c.duration} days
-        </div>`;
-    });
-  }
-
-  function updateSummaryCards() {
-    if (!backendCycles.length) return;
-    document.getElementById("cycle-length").textContent = backendCycles[0].duration + " days";
-    if (backendCycles[1]) {
-      document.getElementById("prev-length").textContent = backendCycles[1].duration + " days";
-    }
-   document.getElementById("next-in").textContent =
-     calculateNextPeriodIn();
-
-    document.getElementById("reg-score").textContent = "84%";
+    backendCycles
+      .slice(0, parseInt(timelineCount.value))
+      .forEach(c => {
+        timelineBox.innerHTML += `
+          <div class="timeline-line">
+            ${fmt(c.startDate)} → ${fmt(c.endDate)} — ${c.duration} days
+          </div>`;
+      });
   }
 
   /* ==============================
@@ -336,7 +346,10 @@ document.addEventListener("DOMContentLoaded", () => {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   }
   function fmt(date) {
-    return new Date(date).toLocaleString("default", { month: "short", day: "numeric" });
+    return new Date(date).toLocaleString("default", {
+      month: "short",
+      day: "numeric"
+    });
   }
   function showToast(msg) {
     const t = document.getElementById("toast");
@@ -352,5 +365,6 @@ document.addEventListener("DOMContentLoaded", () => {
   renderCalendar();
   loadCyclesFromBackend();
   loadPeriodsFromBackend();
+  refreshAnalytics();
 
 });

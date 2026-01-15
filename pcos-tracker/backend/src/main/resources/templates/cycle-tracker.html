@@ -212,6 +212,14 @@
   cursor: not-allowed;
   box-shadow: none;
 }
+/* FADE OUT NON-CURRENT MONTH DAYS */
+.cal-cell.disabled {
+  opacity: 0.35;
+  background: #f7f7f7;
+  color: #999;
+  cursor: default;
+  pointer-events: none; /* cannot be clicked */
+}
 
 
         /* RIGHT COLUMN */
@@ -255,6 +263,24 @@
         .insights ul{
           margin-left:18px;margin-top:10px;color:var(--muted);
         }
+                /* PERIOD HIGHLIGHTING */
+               /* Current (latest) period */
+                .cal-cell.period-current {
+                  background: rgba(243, 122, 122, 0.55);
+                  color: #7a0c10;
+                  border-radius: 12px;
+                  width: 100%;
+                  height: 56px;
+                }
+
+                /* Previous period (lighter shade) */
+                .cal-cell.period-previous {
+                  background: rgba(243, 122, 122, 0.25);
+                  color: #7a0c10;
+                  border-radius: 12px;
+                  width: 100%;
+                  height: 56px;
+                }
 
                     /* TOAST MESSAGE */
             .toast-msg {
