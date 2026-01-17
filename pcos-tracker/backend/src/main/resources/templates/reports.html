@@ -316,133 +316,53 @@
 </div>
 
 <script>
+/* ==================================================
+   GLOBAL TOKEN (auth.js already ensured login)
+================================================== */
+const token = localStorage.getItem("token");
 
-    const token = localStorage.getItem("token");
+/* ==================================================
+   ELEMENTS
+================================================== */
+const uploadBox = document.getElementById("uploadBox");
+const fileInput = document.getElementById("reportFile");
+const reportsList = document.getElementById("reportsList");
+const progressWrapper = document.getElementById("progressWrapper");
+const progressBar = document.getElementById("uploadProgress");
 
-    /* =========================
-       AUTH CHECK
-    ========================== */
-    document.addEventListener("DOMContentLoaded", async () => {
-  if (!token) {
-    window.location.href = "/login";
-    return;
-  }
-
-  try {
-    const res = await fetch("/auth/me", {
-      headers: { Authorization: "Bearer " + token }
-    });
-
-    if (!res.ok) throw new Error("Unauthorized");
-
-    loadReports(); // user is inferred from JWT
-  } catch (e) {
-    alert("Please login again");
-    window.location.href = "/login";
-  }
+/* ==================================================
+   INIT
+================================================== */
+document.addEventListener("DOMContentLoaded", () => {
+  loadReports();
 });
 
-
-    /* =========================
-       UPLOAD UI WIRING
-    ========================== */
-    const uploadBox = document.getElementById("uploadBox");
-    const fileInput = document.getElementById("reportFile");
-
-    uploadBox.onclick = () => fileInput.click();
-
-    uploadBox.addEventListener("dragover", e => {
-      e.preventDefault();
-      uploadBox.classList.add("dragover");
-    });
-
-    uploadBox.addEventListener("dragleave", () => {
-      uploadBox.classList.remove("dragover");
-    });
-
-    uploadBox.addEventListener("drop", e => {
-      e.preventDefault();
-      uploadBox.classList.remove("dragover");
-      uploadReport(e.dataTransfer.files[0]);
-    });
-
-    fileInput.addEventListener("change", () => {
-      if (fileInput.files.length) {
-        uploadReport(fileInput.files[0]);
-      }
-    });
-
-    /* =========================
-       UPLOAD REPORT (REAL)
-    ========================== */
-    async function uploadReport(file) {
-      const allowed = ["application/pdf", "image/jpeg", "image/png"];
-      if (!allowed.includes(file.type)) {
-        alert("Only PDF, JPG, PNG allowed");
-        return;
-      }
-
-      const progressWrapper = document.getElementById("progressWrapper");
-      const progressBar = document.getElementById("uploadProgress");
-      progressWrapper.style.display = "block";
-      progressBar.style.width = "30%";
-
-      const formData = new FormData();
-      formData.append("file", file);
-
-      try {
-        const res = await fetch("/reports/upload", {
-          method: "POST",
-          headers: {
-            Authorization: "Bearer " + token
-          },
-          body: formData
-        });
-
-        if (!res.ok) throw new Error("Upload failed");
-
-        progressBar.style.width = "100%";
-        setTimeout(() => {
-          progressWrapper.style.display = "none";
-          progressBar.style.width = "0%";
-        }, 400);
-
-        fileInput.value = "";
-        loadReports();
-        showToast("✔ Report uploaded successfully");
-      } catch (e) {
-        console.error(e);
-        alert("Failed to upload report");
-        progressWrapper.style.display = "none";
-      }
-    }
-
-    /* =========================
-       LOAD REPORTS
-    ========================== */
-    async function loadReports() {
+/* ==================================================
+   LOAD REPORTS
+================================================== */
+async function loadReports() {
   try {
-    const token = localStorage.getItem("token");
-
     const res = await fetch("/reports/all", {
       headers: {
         Authorization: "Bearer " + token
       }
     });
 
-    if (!res.ok) throw new Error("Failed to fetch reports");
+    if (!res.ok) throw new Error("Failed to load");
 
     const reports = await res.json();
-    const container = document.getElementById("reportsList");
-    container.innerHTML = "";
+    reportsList.innerHTML = "";
 
     if (!reports.length) {
-      container.innerHTML = "<p>No reports uploaded yet.</p>";
+      reportsList.innerHTML =
+        `<p style="color:#6f6f6f;">No reports uploaded yet.</p>`;
       return;
     }
 
     reports.forEach(r => {
-      container.innerHTML += `
+      const date = r.uploadDate?.split("T")[0] ?? "";
+
+      reportsList.innerHTML += `
         <div class="report-item">
           <div class="report-info">
             <div class="report-icon">
@@ -450,11 +370,11 @@
             </div>
             <div>
               <div class="fw-semibold">${r.fileName}</div>
-              <small>${new Date(r.uploadDate).toLocaleDateString()}</small>
+              <div class="report-date">Uploaded on ${date}</div>
             </div>
           </div>
 
-          <div style="display:flex;gap:10px;">
+          <div style="display:flex; gap:10px;">
             <button class="action-btn" onclick="downloadReport(${r.id})">
               <i class="fa-solid fa-download"></i>
             </button>
@@ -467,75 +387,151 @@
     });
 
   } catch (e) {
-    console.error("Failed to load reports", e);
+    console.error(e);
     showToast("❌ Failed to load reports");
   }
 }
 
+/* ==================================================
+   UPLOAD REPORT
+================================================== */
+async function uploadReport(file) {
+  const allowed = ["application/pdf", "image/jpeg", "image/png"];
+  if (!allowed.includes(file.type)) {
+    showToast("❌ Only PDF, JPG, PNG allowed");
+    return;
+  }
 
-    /* =========================
-       ACTIONS
-    ========================== */
-    async function downloadReport(id) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  progressWrapper.style.display = "block";
+  progressBar.style.width = "0%";
+
   try {
-    const token = localStorage.getItem("token");
+    const res = await fetch("/reports/upload", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + token
+      },
+      body: formData
+    });
 
+    if (!res.ok) throw new Error();
+
+    progressBar.style.width = "100%";
+    setTimeout(() => {
+      progressWrapper.style.display = "none";
+      progressBar.style.width = "0%";
+    }, 400);
+
+    fileInput.value = "";
+    showToast("✔ Report uploaded successfully");
+    loadReports();
+
+  } catch (e) {
+    console.error(e);
+    progressWrapper.style.display = "none";
+    showToast("❌ Upload failed");
+  }
+}
+
+/* ==================================================
+   DOWNLOAD REPORT
+================================================== */
+async function downloadReport(id) {
+  try {
     const res = await fetch(`/reports/download/${id}`, {
       headers: {
         Authorization: "Bearer " + token
       }
     });
 
-    if (!res.ok) throw new Error("Download failed");
+    if (!res.ok) throw new Error();
 
     const blob = await res.blob();
-
     const url = window.URL.createObjectURL(blob);
+
     const a = document.createElement("a");
     a.href = url;
-
-    // optional: extract filename from header
     a.download = "medical-report";
     document.body.appendChild(a);
     a.click();
     a.remove();
 
     window.URL.revokeObjectURL(url);
-
     showToast("⬇️ Report downloaded");
 
   } catch (e) {
     console.error(e);
-    showToast("❌ Failed to download report");
+    showToast("❌ Download failed");
   }
 }
 
-    async function deleteReport(id) {
+/* ==================================================
+   DELETE REPORT
+================================================== */
+async function deleteReport(id) {
   if (!confirm("Delete this report?")) return;
 
   try {
-    await fetch(`/reports/delete/${id}`, {
+    const res = await fetch(`/reports/delete/${id}`, {
       method: "DELETE",
-      headers: { Authorization: "Bearer " + token }
+      headers: {
+        Authorization: "Bearer " + token
+      }
     });
 
-    showToast("🗑 Report deleted successfully");
+    if (!res.ok) throw new Error();
+
+    showToast("🗑 Report deleted");
     loadReports();
 
   } catch (e) {
     console.error(e);
-    showToast("❌ Failed to delete report");
+    showToast("❌ Delete failed");
   }
 }
 
+/* ==================================================
+   UPLOAD UI INTERACTIONS
+================================================== */
+uploadBox.onclick = () => fileInput.click();
 
-    function showToast(msg) {
-      const box = document.createElement("div");
-      box.className = "toast-msg";
-      box.textContent = msg;
-      document.body.appendChild(box);
-      setTimeout(() => box.remove(), 3000);
-    }
+uploadBox.addEventListener("dragover", e => {
+  e.preventDefault();
+  uploadBox.classList.add("dragover");
+});
+
+uploadBox.addEventListener("dragleave", () => {
+  uploadBox.classList.remove("dragover");
+});
+
+uploadBox.addEventListener("drop", e => {
+  e.preventDefault();
+  uploadBox.classList.remove("dragover");
+  if (e.dataTransfer.files[0]) {
+    uploadReport(e.dataTransfer.files[0]);
+  }
+});
+
+fileInput.addEventListener("change", () => {
+  if (fileInput.files[0]) {
+    uploadReport(fileInput.files[0]);
+  }
+  fileInput.value = "";
+});
+
+/* ==================================================
+   TOAST
+================================================== */
+function showToast(message) {
+  const toast = document.createElement("div");
+  toast.className = "toast-msg";
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
 </script>
 
 
