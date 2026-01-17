@@ -7,9 +7,11 @@ import com.example.pcos.health.tracker.repository.UserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -23,20 +25,35 @@ public class MedicalReportController {
     @Autowired
     private UserRepository userRepository;
 
-    // -------------------------------
-    // 1) UPLOAD FILE
-    // -------------------------------
+    /* =====================================================
+       HELPER → GET LOGGED-IN USER FROM JWT
+    ====================================================== */
+    private User getLoggedInUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName(); // extracted from JWT
+
+        User user = userRepository.findByEmail(email);
+
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+
+        return user;
+    }
+
+
+    /* =====================================================
+       1) UPLOAD REPORT
+    ====================================================== */
     @PostMapping("/upload")
     public ResponseEntity<?> uploadReport(
-            @RequestParam Long userId,
             @RequestParam("file") MultipartFile file) {
 
         try {
-            Optional<User> userOpt = userRepository.findById(userId);
-            if (userOpt.isEmpty()) return ResponseEntity.badRequest().body("User not found");
+            User user = getLoggedInUser();
 
             MedicalReport report = new MedicalReport();
-            report.setUser(userOpt.get());
+            report.setUser(user);
             report.setFileName(file.getOriginalFilename());
             report.setFileType(file.getContentType());
             report.setUploadDate(LocalDateTime.now());
@@ -44,20 +61,26 @@ public class MedicalReportController {
 
             reportRepository.save(report);
 
-            return ResponseEntity.ok(Map.of("message", "Report uploaded", "id", report.getId()));
+            return ResponseEntity.ok(
+                    Map.of("message", "Report uploaded", "id", report.getId())
+            );
 
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error uploading file: " + e.getMessage());
+            return ResponseEntity
+                    .badRequest()
+                    .body("Error uploading report: " + e.getMessage());
         }
     }
 
-    // -------------------------------
-    // 2) GET ALL REPORTS FOR USER
-    // -------------------------------
+    /* =====================================================
+       2) GET ALL REPORTS (LOGGED-IN USER)
+    ====================================================== */
     @GetMapping("/all")
-    public List<Map<String, Object>> getAllReports(@RequestParam Long userId) {
+    public List<Map<String, Object>> getAllReports() {
 
-        List<MedicalReport> reports = reportRepository.findByUserId(userId);
+        User user = getLoggedInUser();
+        List<MedicalReport> reports = reportRepository.findByUserId(user.getId());
+
         List<Map<String, Object>> response = new ArrayList<>();
 
         for (MedicalReport r : reports) {
@@ -68,19 +91,25 @@ public class MedicalReportController {
                     "uploadDate", r.getUploadDate().toString()
             ));
         }
+
         return response;
     }
 
-    // -------------------------------
-    // 3) DOWNLOAD FILE
-    // -------------------------------
+    /* =====================================================
+       3) DOWNLOAD REPORT (OWNERSHIP CHECK)
+    ====================================================== */
     @GetMapping("/download/{id}")
-    public ResponseEntity<byte[]> downloadFile(@PathVariable Long id) {
+    public ResponseEntity<byte[]> downloadFile(
+            @PathVariable Long id,
+            Principal principal) {
 
-        Optional<MedicalReport> opt = reportRepository.findById(id);
-        if (opt.isEmpty()) return ResponseEntity.notFound().build();
+        MedicalReport report = reportRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Report not found"));
 
-        MedicalReport report = opt.get();
+        // 🔐 Security check (VERY IMPORTANT)
+        if (!report.getUser().getEmail().equals(principal.getName())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
@@ -89,12 +118,23 @@ public class MedicalReportController {
                 .body(report.getFileData());
     }
 
-    // -------------------------------
-    // 4) DELETE REPORT
-    // -------------------------------
+
+    /* =====================================================
+       4) DELETE REPORT (OWNERSHIP CHECK)
+    ====================================================== */
     @DeleteMapping("/delete/{id}")
-    public Map<String, String> deleteReport(@PathVariable Long id) {
-        reportRepository.deleteById(id);
-        return Map.of("message", "Report deleted");
+    public ResponseEntity<?> deleteReport(@PathVariable Long id) {
+
+        User user = getLoggedInUser();
+
+        MedicalReport report = reportRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Report not found"));
+
+        if (!report.getUser().getId().equals(user.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        reportRepository.delete(report);
+        return ResponseEntity.ok(Map.of("message", "Report deleted"));
     }
 }

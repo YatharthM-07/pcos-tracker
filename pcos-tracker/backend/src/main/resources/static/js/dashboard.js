@@ -346,7 +346,19 @@ document.addEventListener("DOMContentLoaded", () => {
       toast.style.display = "block";
       setTimeout(() => (toast.style.display = "none"), 3000);
     }
+    function logout() {
+      // 🔐 clear auth
+      localStorage.removeItem("token");
+      localStorage.removeItem("user"); // optional
 
+      // ✨ optional toast / alert
+      alert("You’ve been logged out 👋");
+
+      // 🏠 redirect to landing page
+      window.location.replace("/");
+      // OR if your index is explicit:
+      // window.location.replace("/index");
+    }
 
   /* ==============================
      DASHBOARD CARDS

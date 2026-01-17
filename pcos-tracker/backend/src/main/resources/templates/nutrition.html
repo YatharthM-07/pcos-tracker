@@ -256,6 +256,10 @@
 </head>
 
 <body>
+<script src="/js/auth.js"></script>
+<script>
+    requireAuth();
+</script>
 
 <!-- NAVBAR -->
 <nav class="navbar navbar-expand-md">
@@ -301,9 +305,8 @@
                 </button>
 
                 <!-- Logout -->
-                <button class="logout" onclick="window.location.href='/login'">
-                    Logout
-                </button>
+                <button class="logout" onclick="logout()">Logout</button>
+
 
             </div>
         </div>

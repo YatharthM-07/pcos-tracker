@@ -219,44 +219,59 @@
 </head>
 
 <body>
+<script src="/js/auth.js"></script>
+<script>
+    requireAuth();
+</script>
 
 <!-- NAVBAR -->
 <nav class="navbar navbar-expand-md">
     <div class="container">
 
-        <!-- LOGO NOW TAKES USER TO DASHBOARD -->
-        <a class="navbar-brand" href="user-dashboard.html">
-            <img src="../static/images/pcos_logo.png" alt="Maitri logo"/>
-            <span class="brand-name">Ma<span class="i-grad">i</span>tr<span class="i-grad">i</span></span>
+        <!-- LOGO → DASHBOARD -->
+        <a class="navbar-brand" href="/user-dashboard">
+            <img src="/images/pcos_logo.png" alt="Maitri logo"/>
+            <span class="brand-name">
+                Ma<span class="i-grad">i</span>tr<span class="i-grad">i</span>
+            </span>
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav">
+
+        <button class="navbar-toggler" type="button"
+                data-bs-toggle="collapse" data-bs-target="#topNav">
             <span class="navbar-toggler-icon"></span>
         </button>
+
         <div class="collapse navbar-collapse justify-content-end" id="topNav">
             <div class="nav-icons">
-                <button class="icon-btn" onclick="window.location.href='/cycle-tracker'">
-                <i class="fa-solid fa-droplet"></i>
+
+                <button class="icon-btn" onclick="window.location.href='/cycle'">
+                    <i class="fa-solid fa-droplet"></i>
                     <span class="d-none d-md-inline"> Cycle</span>
                 </button>
-                <button class="icon-btn" onclick="window.location.href='symptom-tracker.html'">
+
+                <button class="icon-btn" onclick="window.location.href='/symptom'">
                     <i class="fa-solid fa-heart-pulse"></i>
                     <span class="d-none d-md-inline"> Symptom</span>
                 </button>
-                <button class="icon-btn" onclick="window.location.href='nutrition'">
+
+                <button class="icon-btn" onclick="window.location.href='/nutrition'">
                     <i class="fa-solid fa-utensils"></i>
                     <span class="d-none d-md-inline"> Nutrition</span>
                 </button>
-                <button class="icon-btn" onclick="window.location.href='reports.html'">
+
+                <button class="icon-btn" onclick="window.location.href='/reports'">
                     <i class="fa-solid fa-file-medical"></i>
                     <span class="d-none d-md-inline"> Reports</span>
                 </button>
-                <button class="logout" onclick="window.location.href='login.html'">
-                    Logout
-                </button>
+
+                <button class="logout" onclick="logout()">Logout</button>
+
+
             </div>
         </div>
     </div>
 </nav>
+
 
 <!-- MAIN -->
 <div class="main">
@@ -301,161 +316,228 @@
 </div>
 
 <script>
-    // -------------------------------
-    //  STATE
-    // -------------------------------
-    let reports = [];
 
-    // -------------------------------
-    //  UI HELPERS
-    // -------------------------------
-    function showToast(msg){
+    const token = localStorage.getItem("token");
+
+    /* =========================
+       AUTH CHECK
+    ========================== */
+    document.addEventListener("DOMContentLoaded", async () => {
+  if (!token) {
+    window.location.href = "/login";
+    return;
+  }
+
+  try {
+    const res = await fetch("/auth/me", {
+      headers: { Authorization: "Bearer " + token }
+    });
+
+    if (!res.ok) throw new Error("Unauthorized");
+
+    loadReports(); // user is inferred from JWT
+  } catch (e) {
+    alert("Please login again");
+    window.location.href = "/login";
+  }
+});
+
+
+    /* =========================
+       UPLOAD UI WIRING
+    ========================== */
+    const uploadBox = document.getElementById("uploadBox");
+    const fileInput = document.getElementById("reportFile");
+
+    uploadBox.onclick = () => fileInput.click();
+
+    uploadBox.addEventListener("dragover", e => {
+      e.preventDefault();
+      uploadBox.classList.add("dragover");
+    });
+
+    uploadBox.addEventListener("dragleave", () => {
+      uploadBox.classList.remove("dragover");
+    });
+
+    uploadBox.addEventListener("drop", e => {
+      e.preventDefault();
+      uploadBox.classList.remove("dragover");
+      uploadReport(e.dataTransfer.files[0]);
+    });
+
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files.length) {
+        uploadReport(fileInput.files[0]);
+      }
+    });
+
+    /* =========================
+       UPLOAD REPORT (REAL)
+    ========================== */
+    async function uploadReport(file) {
+      const allowed = ["application/pdf", "image/jpeg", "image/png"];
+      if (!allowed.includes(file.type)) {
+        alert("Only PDF, JPG, PNG allowed");
+        return;
+      }
+
+      const progressWrapper = document.getElementById("progressWrapper");
+      const progressBar = document.getElementById("uploadProgress");
+      progressWrapper.style.display = "block";
+      progressBar.style.width = "30%";
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const res = await fetch("/reports/upload", {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + token
+          },
+          body: formData
+        });
+
+        if (!res.ok) throw new Error("Upload failed");
+
+        progressBar.style.width = "100%";
+        setTimeout(() => {
+          progressWrapper.style.display = "none";
+          progressBar.style.width = "0%";
+        }, 400);
+
+        fileInput.value = "";
+        loadReports();
+        showToast("✔ Report uploaded successfully");
+      } catch (e) {
+        console.error(e);
+        alert("Failed to upload report");
+        progressWrapper.style.display = "none";
+      }
+    }
+
+    /* =========================
+       LOAD REPORTS
+    ========================== */
+    async function loadReports() {
+  try {
+    const token = localStorage.getItem("token");
+
+    const res = await fetch("/reports/all", {
+      headers: {
+        Authorization: "Bearer " + token
+      }
+    });
+
+    if (!res.ok) throw new Error("Failed to fetch reports");
+
+    const reports = await res.json();
+    const container = document.getElementById("reportsList");
+    container.innerHTML = "";
+
+    if (!reports.length) {
+      container.innerHTML = "<p>No reports uploaded yet.</p>";
+      return;
+    }
+
+    reports.forEach(r => {
+      container.innerHTML += `
+        <div class="report-item">
+          <div class="report-info">
+            <div class="report-icon">
+              <i class="fa-solid fa-file-medical"></i>
+            </div>
+            <div>
+              <div class="fw-semibold">${r.fileName}</div>
+              <small>${new Date(r.uploadDate).toLocaleDateString()}</small>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;">
+            <button class="action-btn" onclick="downloadReport(${r.id})">
+              <i class="fa-solid fa-download"></i>
+            </button>
+            <button class="action-btn" onclick="deleteReport(${r.id})">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    });
+
+  } catch (e) {
+    console.error("Failed to load reports", e);
+    showToast("❌ Failed to load reports");
+  }
+}
+
+
+    /* =========================
+       ACTIONS
+    ========================== */
+    async function downloadReport(id) {
+  try {
+    const token = localStorage.getItem("token");
+
+    const res = await fetch(`/reports/download/${id}`, {
+      headers: {
+        Authorization: "Bearer " + token
+      }
+    });
+
+    if (!res.ok) throw new Error("Download failed");
+
+    const blob = await res.blob();
+
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+
+    // optional: extract filename from header
+    a.download = "medical-report";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    window.URL.revokeObjectURL(url);
+
+    showToast("⬇️ Report downloaded");
+
+  } catch (e) {
+    console.error(e);
+    showToast("❌ Failed to download report");
+  }
+}
+
+    async function deleteReport(id) {
+  if (!confirm("Delete this report?")) return;
+
+  try {
+    await fetch(`/reports/delete/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: "Bearer " + token }
+    });
+
+    showToast("🗑 Report deleted successfully");
+    loadReports();
+
+  } catch (e) {
+    console.error(e);
+    showToast("❌ Failed to delete report");
+  }
+}
+
+
+    function showToast(msg) {
       const box = document.createElement("div");
       box.className = "toast-msg";
       box.textContent = msg;
       document.body.appendChild(box);
       setTimeout(() => box.remove(), 3000);
     }
-
-    function renderReports(){
-      const container = document.getElementById("reportsList");
-      container.innerHTML = "";
-
-      if(!reports.length){
-        container.innerHTML = `<p style="color:var(--muted);">No reports uploaded yet.</p>`;
-        return;
-      }
-
-      reports.forEach(r => {
-        container.innerHTML += `
-          <div class="report-item">
-            <div class="report-info">
-              <div class="report-icon"><i class="fa-solid fa-file-medical"></i></div>
-              <div>
-                <div class="fw-semibold">${r.fileName}</div>
-                <div class="report-date">Uploaded on ${r.date}</div>
-              </div>
-            </div>
-
-            <div style="display:flex;gap:10px;">
-              <button class="action-btn" onclick="downloadReport('${r.fileName}')">
-                <i class="fa-solid fa-download"></i>
-              </button>
-              <button class="action-btn" onclick="deleteReport('${r.fileName}')">
-                <i class="fa-solid fa-trash"></i>
-              </button>
-            </div>
-          </div>
-        `;
-      });
-    }
-
-    // -------------------------------
-    //  UPLOAD LOGIC
-    // -------------------------------
-    const uploadBox = document.getElementById("uploadBox");
-    const fileInput = document.getElementById("reportFile");
-
-    uploadBox.onclick = () => fileInput.click();
-
-    uploadBox.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      uploadBox.classList.add("dragover");
-    });
-    uploadBox.addEventListener("dragleave", () => {
-      uploadBox.classList.remove("dragover");
-    });
-    uploadBox.addEventListener("drop", (e) => {
-      e.preventDefault();
-      uploadBox.classList.remove("dragover");
-
-      const file = e.dataTransfer.files[0];
-      handleFile(file);
-    });
-
-    fileInput.addEventListener("change", () => {
-      const file = fileInput.files[0];
-      handleFile(file);
-    });
-
-    function handleFile(file){
-      if(!file) return;
-
-      const allowed = ["application/pdf", "image/jpeg", "image/png"];
-      if(!allowed.includes(file.type)){
-        showToast("❌ Only PDF, JPG, PNG allowed!");
-        fileInput.value = "";
-        return;
-      }
-
-      simulateUpload(file);
-    }
-
-    // -------------------------------
-    //  SIMULATED UPLOAD + PROGRESS
-    // -------------------------------
-    function simulateUpload(file){
-      const progressWrapper = document.getElementById("progressWrapper");
-      const progressBar = document.getElementById("uploadProgress");
-
-      progressWrapper.style.display = "block";
-      progressBar.style.width = "0%";
-
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += 10;
-        progressBar.style.width = progress + "%";
-
-        if(progress >= 100){
-          clearInterval(interval);
-          progressWrapper.style.display = "none";
-
-          // Save mock report
-          reports.unshift({
-            fileName: file.name,
-            date: new Date().toLocaleDateString()
-          });
-
-          renderReports();
-          showToast("✔ Report uploaded successfully!");
-        }
-      }, 150);
-
-      fileInput.value = "";
-
-      // Backend real upload:
-      /*
-      const formData = new FormData();
-      formData.append("file", file);
-
-      fetch("/reports/upload", {
-        method:"POST",
-        body:formData
-      })
-      .then(() => { loadReports(); })
-      */
-    }
-
-    // -------------------------------
-    //  ACTIONS (download / delete)
-    // -------------------------------
-    function downloadReport(name){
-      showToast("Downloading: " + name);
-      // Real:
-      // window.location.href = `/reports/download/${name}`;
-    }
-
-    function deleteReport(name){
-      reports = reports.filter(r => r.fileName !== name);
-      renderReports();
-      showToast("🗑 Report deleted");
-      // Real:
-      // fetch(`/reports/delete/${name}`, { method:"DELETE" });
-    }
-
-    // INIT
-    renderReports();
 </script>
+
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

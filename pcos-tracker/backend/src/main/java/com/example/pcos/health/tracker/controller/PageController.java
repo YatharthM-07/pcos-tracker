@@ -30,6 +30,15 @@ public class PageController {
     public String nutrition() {
         return "nutrition";
     }
+    @GetMapping("/symptom")
+    public String symptom() {
+        return "symptom-tracker";
+    }
+    @GetMapping("/reports")
+    public String reports() {
+        return "reports";
+    }
+
 
     @GetMapping("/cycle-tracker")
     public String cycleTracker() {
