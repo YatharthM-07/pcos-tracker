@@ -197,6 +197,7 @@ body{
 <script>
     requireAuth();
 </script>
+
 <!-- NAVBAR -->
 <nav class="navbar navbar-expand-md">
     <div class="container">
@@ -209,8 +210,10 @@ body{
             <button class="icon-btn" onclick="location.href='/cycle-tracker'">
                 <i class="fa-solid fa-droplet"></i> Cycle
             </button>
-            <button class="icon-btn">
-                <i class="fa-solid fa-heart-pulse"></i> Symptom
+            <!-- Symptom -->
+            <button class="icon-btn" onclick="window.location.href='/symptom-tracker'">
+                <i class="fa-solid fa-heart-pulse"></i>
+                <span class="d-none d-md-inline"> Symptom</span>
             </button>
             <button class="icon-btn" onclick="location.href='/nutrition'">
                 <i class="fa-solid fa-utensils"></i> Nutrition
@@ -218,6 +221,7 @@ body{
             <button class="icon-btn" onclick="location.href='/reports'">
                 <i class="fa-solid fa-file-medical"></i> Reports
             </button>
+            <!-- Logout -->
             <button class="logout" onclick="logout()">Logout</button>
         </div>
     </div>

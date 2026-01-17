@@ -65,7 +65,7 @@ public class SecurityConfig {
                                 "/cycle-tracker",
                                 "/symptom-tracker",
                                 "/nutrition",
-                                "/reports-page"
+                                "/reports"
                         ).permitAll()
 
                         // 🌐 STATIC RESOURCES
