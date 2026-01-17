@@ -188,7 +188,50 @@ body{
 .entry small{
   color:var(--muted);
 }
+@media (max-width: 768px) {
 
+  /* Keep navbar above all content */
+  .navbar {
+    z-index: 6000;
+  }
+
+  /* Mobile dropdown container */
+  .navbar-collapse {
+    position: absolute;
+    top: var(--nav-h);
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    padding: 16px;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.12);
+    border-radius: 0 0 16px 16px;
+  }
+
+  /* Stack menu items vertically */
+  .nav-icons {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  /* Make each item full-width & tappable */
+  .icon-btn {
+    width: 100%;
+    justify-content: flex-start;
+    font-size: 1rem;
+  }
+
+  /* Links should behave like buttons */
+  .icon-btn {
+    text-decoration: none;
+  }
+
+  /* Logout button alignment */
+  .logout {
+    width: 100%;
+    text-align: center;
+  }
+}
     </style>
 </head>
 
@@ -201,31 +244,62 @@ body{
 <!-- NAVBAR -->
 <nav class="navbar navbar-expand-md">
     <div class="container">
+
         <a class="navbar-brand" href="/user-dashboard">
-            <img src="/images/pcos_logo.png">
-            <span class="brand-name">Ma<span class="i-grad">i</span>tr<span class="i-grad">i</span></span>
+            <img src="/images/pcos_logo.png" alt="Maitri logo"/>
+            <span class="brand-name">
+        Ma<span class="i-grad">i</span>tr<span class="i-grad">i</span>
+      </span>
         </a>
 
-        <div class="nav-icons">
-            <button class="icon-btn" onclick="location.href='/cycle-tracker'">
-                <i class="fa-solid fa-droplet"></i> Cycle
-            </button>
-            <!-- Symptom -->
-            <button class="icon-btn" onclick="window.location.href='/symptom-tracker'">
-                <i class="fa-solid fa-heart-pulse"></i>
-                <span class="d-none d-md-inline"> Symptom</span>
-            </button>
-            <button class="icon-btn" onclick="location.href='/nutrition'">
-                <i class="fa-solid fa-utensils"></i> Nutrition
-            </button>
-            <button class="icon-btn" onclick="location.href='/reports'">
-                <i class="fa-solid fa-file-medical"></i> Reports
-            </button>
-            <!-- Logout -->
-            <button class="logout" onclick="logout()">Logout</button>
+        <button class="navbar-toggler" type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#topNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse justify-content-end" id="topNav">
+
+            <ul class="navbar-nav nav-icons">
+
+                <li class="nav-item">
+                    <a class="icon-btn nav-link" href="/cycle-tracker">
+                        <i class="fa-solid fa-droplet"></i>
+                        <span>Cycle</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="icon-btn nav-link" href="/symptom-tracker">
+                        <i class="fa-solid fa-heart-pulse"></i>
+                        <span>Symptom</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="icon-btn nav-link" href="/nutrition">
+                        <i class="fa-solid fa-utensils"></i>
+                        <span>Nutrition</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="icon-btn nav-link" href="/reports">
+                        <i class="fa-solid fa-file-medical"></i>
+                        <span>Reports</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <button class="logout w-100" onclick="logout()">Logout</button>
+                </li>
+
+            </ul>
+
         </div>
     </div>
 </nav>
+
 
 <!-- JS -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
