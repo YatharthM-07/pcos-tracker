@@ -108,7 +108,7 @@
         .content-section { padding:50px 0 70px; }
 
         .phone-img {
-          max-width:500px;
+          max-width:410px;
           margin: 80px auto 0;
           display:block;
           border-radius:20px;
@@ -139,8 +139,8 @@
         }
 
         .feature-icon {
-          width:46px;
-          height:46px;
+          width:86px;
+          height:86px;
           border-radius:10px;
           background:#ffeef4;
           border:1px solid var(--card-border);
@@ -176,7 +176,7 @@
 <nav class="navbar navbar-expand-lg">
     <div class="container">
         <a class="navbar-brand" href="#home">
-            <img src="../static/images/pcos_logo.png" alt="logo">
+            <img src="/images/pcos_logo.png" alt="Maitri logo"/>
 
             <span class="brand-name">
             Ma<span class="i-grad">i</span>tr<span class="i-grad">i</span>
@@ -213,7 +213,7 @@
 
             <!-- LEFT phone image -->
             <div class="col-lg-5 text-center mb-4">
-                <img src="../static/images/pcos-dashboard-image.png" class="phone-img" alt="app preview">
+                <img src="images/index_image.png" class="phone-img" alt="app preview">
             </div>
 
             <!-- RIGHT features -->
@@ -225,8 +225,8 @@
                         <div class="feature-card">
                             <div class="feature-icon"><i class="fa-solid fa-droplet"></i></div>
                             <div>
-                                <div class="feature-title">Cycle & Fertility</div>
-                                <div class="feature-desc">Track periods, flow, fertile windows, and monthly patterns effortlessly.</div>
+                                <div class="feature-title">Cycle Tracking</div>
+                                <div class="feature-desc">Log period start and end dates, flow notes, and view cycle patterns over time.</div>
                             </div>
                         </div>
                     </div>
@@ -235,8 +235,8 @@
                         <div class="feature-card">
                             <div class="feature-icon"><i class="fa-solid fa-heart-pulse"></i></div>
                             <div>
-                                <div class="feature-title">Symptom & Mood</div>
-                                <div class="feature-desc">Record mood swings, cramps, fatigue and detect recurring patterns.</div>
+                                <div class="feature-title">Symptom Tracking</div>
+                                <div class="feature-desc">Record daily symptoms like cramps, fatigue, mood changes, and track their frequency.</div>
                             </div>
                         </div>
                     </div>
@@ -245,8 +245,8 @@
                         <div class="feature-card">
                             <div class="feature-icon"><i class="fa-solid fa-utensils"></i></div>
                             <div>
-                                <div class="feature-title">Nutrition & Activity</div>
-                                <div class="feature-desc">Find PCOS-friendly foods & small activities to support your health.</div>
+                                <div class="feature-title">PCOS-Friendly Food Guide</div>
+                                <div class="feature-desc"> Search and explore PCOS-friendly food and to-avoid foods based on common Indian diets.</div>
                             </div>
                         </div>
                     </div>
@@ -255,8 +255,8 @@
                         <div class="feature-card">
                             <div class="feature-icon"><i class="fa-solid fa-file-medical"></i></div>
                             <div>
-                                <div class="feature-title">Reports & Insights</div>
-                                <div class="feature-desc">Upload medical reports, store them securely, and view quick insights.</div>
+                                <div class="feature-title">Medical Reports</div>
+                                <div class="feature-desc">Upload, store, and access medical reports securely in one organized place.</div>
                             </div>
                         </div>
                     </div>
@@ -268,12 +268,50 @@
 </section>
 
 <!-- ABOUT placeholder -->
-<section id="about" style="padding:60px 0;">
+<!-- ABOUT -->
+<section id="about" style="
+    padding:60px 0;
+    background: linear-gradient(120deg, var(--pink1), var(--lavender));
+">
     <div class="container">
-        <h4>About</h4>
-        <p style="color:#666;">(About content placeholder)</p>
+        <h4 style="font-weight:700; display:flex; align-items:center; gap:10px;">
+            About Maitri 🌸
+        </h4>
+
+
+        <p style="color:#555; margin-top:16px; line-height:1.7;">
+            Maitri was born from a simple but powerful realization — managing PCOS is not just about
+            tracking cycles or symptoms, it’s about understanding one’s body, building consistency,
+            and feeling supported throughout the journey.
+        </p>
+
+        <p style="color:#555; margin-top:12px; line-height:1.7;">
+            Many existing solutions are either overly clinical or disconnected from real-life needs.
+            Maitri bridges that gap by combining thoughtful design, meaningful insights, and
+            technology-driven assistance to make health tracking intuitive, personal, and empowering.
+        </p>
+
+        <p style="color:#555; margin-top:12px; line-height:1.7;">
+            From daily symptom logs and cycle tracking to nutrition guidance and medical report
+            management, Maitri is designed to grow with the user — adapting, learning, and supporting
+            better health decisions over time.
+        </p>
+
+        <p style="color:#555; margin-top:12px; line-height:1.7;">
+            At its core, Maitri stands for care, clarity, and consistency — because health journeys
+            should feel guided, not overwhelming.
+        </p>
+
+        <hr style="margin:30px 0; opacity:0.3;">
+
+        <p style="color:#777; font-size:0.95rem;">
+            Built with purpose and care by
+            <strong>Purvanshi</strong> & <strong>Yatharth</strong>.
+        </p>
     </div>
 </section>
+
+
 
 <script>
     function setActive(e){

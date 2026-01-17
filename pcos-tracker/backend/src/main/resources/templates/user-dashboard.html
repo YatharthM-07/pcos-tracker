@@ -371,7 +371,10 @@
 </head>
 
 <body>
-
+<script src="/js/auth.js"></script>
+<script>
+    requireAuth();
+</script>
 <!-- NAVBAR -->
 <nav class="navbar navbar-expand-md">
     <div class="container">
@@ -404,21 +407,19 @@
                 </button>
 
                 <!-- Nutrition -->
-                <button class="icon-btn" onclick="window.location.href='nutrition'">
+                <button class="icon-btn" onclick="window.location.href='/nutrition'">
                     <i class="fa-solid fa-utensils"></i>
                     <span class="d-none d-md-inline"> Nutrition</span>
                 </button>
 
                 <!-- Reports -->
-                <button class="icon-btn" onclick="window.location.href='/reports-page'">
-                <i class="fa-solid fa-file-medical"></i>
+                <button class="icon-btn" onclick="window.location.href='/reports'">
+                    <i class="fa-solid fa-file-medical"></i>
                     <span class="d-none d-md-inline"> Reports</span>
                 </button>
 
                 <!-- Logout -->
-                <button class="logout" onclick="window.location.href='login.html'">
-                    Logout
-                </button>
+                <button class="logout" onclick="logout()">Logout</button>
 
             </div>
         </div>

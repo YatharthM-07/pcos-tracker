@@ -193,7 +193,10 @@ body{
 </head>
 
 <body>
-
+<script src="/js/auth.js"></script>
+<script>
+    requireAuth();
+</script>
 <!-- NAVBAR -->
 <nav class="navbar navbar-expand-md">
     <div class="container">
@@ -215,7 +218,7 @@ body{
             <button class="icon-btn" onclick="location.href='/reports'">
                 <i class="fa-solid fa-file-medical"></i> Reports
             </button>
-            <button class="logout" onclick="location.href='/login'">Logout</button>
+            <button class="logout" onclick="logout()">Logout</button>
         </div>
     </div>
 </nav>
