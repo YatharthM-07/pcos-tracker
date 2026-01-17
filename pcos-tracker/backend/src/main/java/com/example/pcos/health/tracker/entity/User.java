@@ -5,27 +5,25 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 @Entity
-@Table(name = "users")   // avoid conflict with MySQL reserved word 'user'
+@Table(name = "users")
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Name is required")
+    @NotBlank
     private String name;
 
-    @Email(message = "Invalid email")
-    @Column(unique = true)
+    @Email
+    @Column(unique = true, nullable = false)
     private String email;
 
-    @NotBlank(message = "Password is required")
+    @NotBlank
     private String password;
 
-    // Constructors
     public User() {}
 
-    // Getters & Setters
     public Long getId() {
         return id;
     }
