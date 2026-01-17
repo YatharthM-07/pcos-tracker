@@ -106,8 +106,16 @@ public class DailyLogController {
 
         return ResponseEntity.ok(Map.of(
                 "exists", true,
-                "log", log
+                "log", Map.of(
+                        "cramps", log.getCramps(),
+                        "acne", log.getAcne(),
+                        "mood", log.getMood(),
+                        "bloating", log.getBloating(),
+                        "fatigue", log.getFatigue(),
+                        "headache", log.getHeadache()
+                )
         ));
+
     }
 
 

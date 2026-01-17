@@ -17,13 +17,20 @@ document.addEventListener("DOMContentLoaded", () => {
   fetch("/auth/me", {
     headers: { Authorization: "Bearer " + token }
   })
-    .then(res => res.json())
-    .then(user => {
-      const usernameEl = document.getElementById("username");
-      if (usernameEl && user.name) {
-        usernameEl.textContent = `Hi, ${user.name} 🌸`;
-      }
-    });
+  .then(res => {
+    if (!res.ok) throw new Error("Unauthorized");
+    return res.json();
+  })
+  .then(user => {
+    const usernameEl = document.getElementById("username");
+    if (usernameEl && user.name) {
+      usernameEl.textContent = `Hi, ${user.name} 🌸`;
+    }
+  })
+  .catch(() => {
+    logout(); // force clean logout
+  });
+
 
     /* ==============================
        DAILY LOG – LOAD TODAY
