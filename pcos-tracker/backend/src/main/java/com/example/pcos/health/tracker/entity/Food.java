@@ -14,7 +14,7 @@ public class Food {
 
     private String category;
 
-    @Column(name = "pcosTag")
+    @Column(name = "pcos_tag")
     private String pcosTag;
 
 

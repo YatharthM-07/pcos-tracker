@@ -1,0 +1,110 @@
+name,category,pcosTag,description
+Avocado,Fruits,GOOD,"Healthy fats, low GI"
+Spinach,Vegetable,GOOD,"Iron-rich, anti-inflammatory"
+Methi (Fenugreek),Vegetable,GOOD,Hormonal balance support
+Broccoli,Vegetable,GOOD,"High fiber, low GI"
+Palak,Vegetable,GOOD,"Iron, antioxidants"
+Tomato,Fruits,GOOD,Low GI
+Carrot,Vegetable,GOOD,"Low-calorie, fiber rich"
+Cucumber,Fruits,GOOD,Hydrating
+Lauki,Vegetable,GOOD,Light and good for digestion
+Karela,Vegetable,GOOD,Blood sugar control
+Drumstick,Fruits,GOOD,Moringa benefits
+Turmeric,Vegetable,GOOD,Anti-inflammatory
+Flax Seeds,Fruits,GOOD,Hormone support
+Chia Seeds,Fruits,GOOD,Omega-3
+Almonds,Fruits,GOOD,Healthy fats
+Walnuts,Fruits,GOOD,Anti-inflammatory
+Moong Dal,Pulses,GOOD,Low GI
+Chole(Chickpeas),Pulses,GOOD,High protein
+Rajma,Pulses,GOOD,Fiber + protein
+Masoor Dal,Pulses,GOOD,Iron
+Brown Rice,Grain,GOOD,Low GI
+Dalia,Grain,GOOD,High fiber
+Oats,Grain,GOOD,Beta-glucan
+Ragi,Grain,GOOD,Calcium rich
+Jowar,Grain,GOOD,Gluten free
+Bajra,Grain,GOOD,Good for winter
+Paneer (Low Fat),Dairy Product,GOOD,High protein
+Greek Yogurt,Dairy Product,GOOD,Gut health
+Eggs,Indian Meal,GOOD,High protein
+Chicken Breast,Indian Meal,GOOD,Lean protein
+Fish (Rohu),Indian Meal,GOOD,Omega-3
+Fish (Hilsa),Indian Meal,GOOD,Healthy fats
+Baingan(Brinjal),Fruits,GOOD,High fiber
+Tinda(inidan-roundgourd),Vegetable,GOOD,"High fiber, low GI"
+Arbi(Colocasia),Vegetable,GOOD,Low GI
+Gobi(CauliFlower),Vegetable,GOOD,High fiber
+Matar(peas),Fruits,GOOD,High fiber
+Shimla Mirch(Capsicum),Fruits,GOOD,High fiber
+Kofta Balls,Indian Meal,GOOD,Low GI
+Khichdi ,Grain,GOOD,"High fiber, low GI"
+Poha,Indian Meal,LIMIT,High fiber if cooked properly
+Upma,Indian Meal,GOOD,High fiber
+Idli,Indian Meal,GOOD,High protein
+Dosa,Indian Meal,LIMIT,Low GI if cooked properly
+Medu Vada,Indian Meal,LIMIT,Low nutrition when fried
+Puri,Indian Meal,AVOID,Low nutrition when fried
+Paratha,Indian Meal,LIMIT,Diabetic if eaten regularly
+Bhatura ,Indian Meal,LIMIT,High fat
+Aloo Sabzi,Indian Meal,LIMIT,High GI
+Chole Bhature ,Snacks,AVOID,Unhealthy because it is fried
+Pav Bhaji ,Snacks,AVOID,High GI
+Samosa,Snacks,LIMIT,Hormone imbalance
+Kachori,Snacks,AVOID,Unhealthy because it is fried
+Bread Pakora ,Snacks,AVOID,Blood sugar level spikes
+Bhel Puri ,Snacks,LIMIT,High GI
+Pani Puri,Snacks,LIMIT,High GI
+Sev Puri ,Snacks,LIMIT,High GI
+Dhokla,Snacks,GOOD,High protein
+Thepla,Snacks,LIMIT,High fat
+Khandvi,Snacks,GOOD,Low GI
+Undhiyu,Indian Meal,AVOID,High GI
+Kadhi,Indian Meal,GOOD,Blood sugar control
+Dal Tadka ,Pulses,GOOD,High protein
+Dal Fry ,Pulses,GOOD,High protein
+Jeera Rice ,Grain,GOOD,Blood sugar control
+Veg Pulao,Indian Meal,GOOD,High fiber
+Biryani ,Indian Meal,LIMIT,High GI
+Masala Rice ,Grain,AVOID,High GI
+Coconut Rice,Grain,LIMIT,High GI
+Rasam ,Indian Meal,LIMIT,High fiber
+Sambar ,Vegetable,GOOD,Low GI
+Curd Rice,Indian Meal,GOOD,Blood sugar control
+Lemon Rice ,Grain,LIMIT,High GI
+Tamarind Rice ,Grain,LIMIT,Sour food
+Roti ,Indian Meal,GOOD,High fiber
+Phulka ,Indian Meal,GOOD,High fiber
+Naan ,Indian Meal,AVOID,High GI
+Kulcha ,Indian Meal,LIMIT,High GI
+Cinnamon Tea,Beverage,GOOD,Blood sugar control
+Green Tea,Beverage,GOOD,Weight Management
+Tea ,Beverage,LIMIT,High Caffeine if consumed on regular basis
+Coffee ,Beverage,LIMIT,High Caffeine if consumed on regular basis
+Lassi,Beverage,LIMIT,Hormonal imbalance if consumed on regular basis
+Chaach ,Beverage,LIMIT,Blood sugar level spikes
+Milkshake,Beverage,AVOID,Hormonal imbalance if consumed on regular basis
+Gulab Jamun ,Snacks,AVOID,Deep fried
+Rasgulla ,Snacks,AVOID,Blood sugar level spikes
+Sandesh ,Snacks,LIMIT,Still contains sugar but portion control is key
+Jalebi ,Snacks,AVOID,Deep fried
+Imarti ,Snacks,AVOID,Deep fried
+Chikki ,Snacks,LIMIT,Healthy fats and protein slow sugar absorption
+Gajak,Snacks,LIMIT,"High calories, moderate sugar"
+Murmura Laddu ,Snacks,LIMIT,Low calorie but jaggery adds sugar
+Apple ,Fruits,GOOD,"High fiber, low GI"
+Banana ,Fruits,LIMIT,Carb Heavy
+Mango ,Fruits,LIMIT,Blood sugar level spikes
+Guava,Fruits,GOOD,High fiber
+Papaya ,Fruits,LIMIT,Excess may affect hormone balance
+Orange ,Fruits,GOOD,High Vitamin C
+Mosambi ,Fruits,GOOD,"Hydrating, low GI"
+Bhindi(Lady Finger),Vegetable,GOOD,Low GI
+Red Poha ,Indian Meal,GOOD,High protein
+Mango Shake,Beverage,AVOID,Blood sugar level spikes
+Milk,Dairy Product,LIMIT,Can spike insulin
+Curd/Dahi,Dairy Product,GOOD,Probiotics improve gut health
+Butter,Dairy Product,AVOID,High fat
+Ghee,Dairy Product,LIMIT,Excess = calorie overload
+Cheese,Dairy Product,AVOID,Can worsen acne & bloating
+Ice Cream,Dairy Product,LIMIT,Blood sugar level spikes
