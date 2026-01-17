@@ -63,15 +63,19 @@ public class FoodController {
     @GetMapping("/ai")
     public ResponseEntity<?> getAiFoodSuggestions(@RequestParam String preference) {
 
-        Long userId = authContext.getCurrentUser().getId();
-
         String recommendations = aiFoodService.getFoodRecommendations(preference);
 
-        return ResponseEntity.ok(Map.of(
-                "userId", userId,
-                "preference", preference,
-                "aiRecommendations", recommendations
-        ));
+        Map<String, Object> response = new java.util.HashMap<>();
+        response.put("preference", preference);
+        response.put("aiRecommendations", recommendations);
+
+        if (authContext.getCurrentUser() != null) {
+            response.put("userId", authContext.getCurrentUser().getId());
+        }
+
+        return ResponseEntity.ok(response);
     }
+
+
 
 }

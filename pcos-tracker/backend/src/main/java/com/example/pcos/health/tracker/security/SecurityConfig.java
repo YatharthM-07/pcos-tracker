@@ -20,27 +20,42 @@ public class SecurityConfig {
     @Autowired
     private JwtAuthenticationFilter jwtFilter;
 
+    // ------------------------------------------------
+    // PASSWORD ENCODER
+    // ------------------------------------------------
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    // ------------------------------------------------
+    // AUTH MANAGER
+    // ------------------------------------------------
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
+    // ------------------------------------------------
+    // SECURITY FILTER CHAIN
+    // ------------------------------------------------
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
+                // ❌ Disable CSRF (JWT-based app)
                 .csrf(csrf -> csrf.disable())
+
+                // 🔒 Stateless session (JWT)
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+
+                // 🔐 Authorization rules
                 .authorizeHttpRequests(auth -> auth
 
-                        // 🌐 PUBLIC PAGES (HTML)
+                        // 🌐 PUBLIC HTML PAGES (Thymeleaf)
                         .requestMatchers(
                                 "/",
                                 "/index",
@@ -50,10 +65,10 @@ public class SecurityConfig {
                                 "/cycle-tracker",
                                 "/symptom-tracker",
                                 "/nutrition",
-                                "/reports"
+                                "/reports-page"
                         ).permitAll()
 
-                        // 🌐 STATIC FILES
+                        // 🌐 STATIC RESOURCES
                         .requestMatchers(
                                 "/css/**",
                                 "/js/**",
@@ -61,8 +76,11 @@ public class SecurityConfig {
                                 "/static/**"
                         ).permitAll()
 
-                        // 🔓 AUTH
+                        // 🔓 AUTH ENDPOINTS
                         .requestMatchers("/auth/**").permitAll()
+
+                        // 🟡 FOOD (temporary public)
+                        .requestMatchers("/food/**").permitAll()
 
                         // 🔒 PROTECTED APIs (JWT REQUIRED)
                         .requestMatchers(
@@ -73,19 +91,13 @@ public class SecurityConfig {
                                 "/symptoms/**"
                         ).authenticated()
 
-                        // 🟡 FOOD (TEMP public – OK for now)
-                        .requestMatchers("/food/**").permitAll()
-
                         // 🔒 EVERYTHING ELSE
                         .anyRequest().authenticated()
                 );
 
+        // 🔑 JWT filter
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
-
-
-
 }

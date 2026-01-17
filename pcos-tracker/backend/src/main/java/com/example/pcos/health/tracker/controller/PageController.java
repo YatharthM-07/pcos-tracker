@@ -48,6 +48,11 @@ public class PageController {
     public String symptomTracker() {
         return "symptom-tracker";
     }
+    @GetMapping("/reports-page")
+    public String reports() {
+        return "reports";
+    }
+
 
 }
 
