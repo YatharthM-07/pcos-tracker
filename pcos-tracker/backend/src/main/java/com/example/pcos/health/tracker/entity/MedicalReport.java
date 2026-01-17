@@ -19,7 +19,7 @@ public class MedicalReport {
     private LocalDateTime uploadDate;
 
     @Lob
-    @Column(columnDefinition = "BYTEA")
+    @Column(name = "file_data")
     private byte[] fileData;
 
     @ManyToOne(fetch = FetchType.LAZY)
