@@ -56,23 +56,33 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
 
+        System.out.println("LOGIN ATTEMPT EMAIL = " + request.getEmail());
+
         User user = userRepository.findByEmail(request.getEmail());
 
         if (user == null) {
+            System.out.println("LOGIN FAILED → USER NOT FOUND");
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .body("User not found");
         }
 
+        System.out.println("DB PASSWORD = " + user.getPassword());
+        System.out.println("RAW PASSWORD = " + request.getPassword());
+
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            System.out.println("LOGIN FAILED → PASSWORD MISMATCH");
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .body("Invalid password");
         }
 
+        System.out.println("LOGIN SUCCESS");
+
         String token = jwtUtil.generateToken(user.getEmail());
         return ResponseEntity.ok(new AuthResponse(token));
     }
+
 
     // =========================
     // CURRENT USER
