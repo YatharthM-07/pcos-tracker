@@ -14,32 +14,29 @@ public class CorsConfig {
 
         CorsConfiguration config = new CorsConfiguration();
 
-        // ✅ Firebase Hosting origin
-        config.setAllowedOrigins(List.of(
-                "https://maitri-pcos-tracker-82f0e.web.app"
+        // ✅ Allow Firebase hosting variants
+        config.setAllowedOriginPatterns(List.of(
+                "https://*.web.app",
+                "https://*.firebaseapp.com"
         ));
 
-        // ✅ HTTP methods
         config.setAllowedMethods(List.of(
                 "GET", "POST", "PUT", "DELETE", "OPTIONS"
         ));
 
-        // 🔴 IMPORTANT: Explicit headers (JWT!)
         config.setAllowedHeaders(List.of(
                 "Authorization",
                 "Content-Type",
                 "Accept"
         ));
 
-        // 🔑 Required for Authorization header
+        // 🔴 REQUIRED for JWT
         config.setAllowCredentials(true);
 
-        // Optional but recommended
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
-
         source.registerCorsConfiguration("/**", config);
 
         return source;
