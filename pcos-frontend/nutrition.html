@@ -333,7 +333,7 @@
 <nav class="navbar navbar-expand-md">
     <div class="container">
 
-        <a class="navbar-brand" href="/user-dashboard">
+        <a class="navbar-brand" href="/user-dashboard.html">
             <img src="/images/pcos_logo.png" alt="Maitri logo"/>
             <span class="brand-name">
         Ma<span class="i-grad">i</span>tr<span class="i-grad">i</span>
@@ -351,28 +351,28 @@
             <ul class="navbar-nav nav-icons">
 
                 <li class="nav-item">
-                    <a class="icon-btn nav-link" href="/cycle-tracker">
+                    <a class="icon-btn nav-link" href="/cycle-tracker.html">
                         <i class="fa-solid fa-droplet"></i>
                         <span>Cycle</span>
                     </a>
                 </li>
 
                 <li class="nav-item">
-                    <a class="icon-btn nav-link" href="/symptom-tracker">
+                    <a class="icon-btn nav-link" href="/symptom-tracker.html">
                         <i class="fa-solid fa-heart-pulse"></i>
                         <span>Symptom</span>
                     </a>
                 </li>
 
                 <li class="nav-item">
-                    <a class="icon-btn nav-link" href="/nutrition">
+                    <a class="icon-btn nav-link" href="/nutrition.html">
                         <i class="fa-solid fa-utensils"></i>
                         <span>Nutrition</span>
                     </a>
                 </li>
 
                 <li class="nav-item">
-                    <a class="icon-btn nav-link" href="/reports">
+                    <a class="icon-btn nav-link" href="/reports.html">
                         <i class="fa-solid fa-file-medical"></i>
                         <span>Reports</span>
                     </a>
@@ -442,6 +442,7 @@
 
 <!-- JS -->
 <script>
+    const API = "https://pcos-tracker-9a53.onrender.com";
     let foods = [];
     let currentFoods = [];
 
@@ -450,7 +451,7 @@
     });
     async function loadAllFoods() {
       try {
-        const res = await fetch("/food/all");
+       const res = await fetch(`${API}/food/all`);
 
         if (!res.ok) {
           throw new Error("Failed to load foods: " + res.status);
@@ -501,20 +502,22 @@
         return;
       }
 
-      const res = await fetch(`/food/search?name=${encodeURIComponent(value)}`);
+      const res = await fetch(
+  `${API}/food/search?name=${encodeURIComponent(value)}`
+);
       renderFoods(await res.json());
     }
     async function filterCategory(category) {
       const res = await fetch(
-        `/food/category?category=${encodeURIComponent(category)}`
-      );
+  `${API}/food/category?category=${encodeURIComponent(category)}`
+);
       renderFoods(await res.json());
     }
 
     async function filterTag(tag) {
       const res = await fetch(
-        `/food/pcos-tag?tag=${encodeURIComponent(tag)}`
-      );
+  `${API}/food/pcos-tag?tag=${encodeURIComponent(tag)}`
+);
       renderFoods(await res.json());
     }
 
@@ -558,8 +561,14 @@
       responseBox.innerHTML = "Maitri AI is thinking… 💭";
 
       const res = await fetch(
-        `/food/ai?preference=${encodeURIComponent(input)}`
-      );
+  `${API}/food/ai?preference=${encodeURIComponent(input)}`,
+  {
+    headers: {
+      Authorization: "Bearer " + localStorage.getItem("token")
+    }
+  }
+);
+
       const data = await res.json();
 
       responseBox.innerHTML = data.aiRecommendations;

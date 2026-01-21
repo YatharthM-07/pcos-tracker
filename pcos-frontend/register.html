@@ -129,7 +129,7 @@
 
     <div class="text-center mt-3">
         Already have an account?
-        <a href="/login" style="color:#F37A7A; font-weight:600; text-decoration:none;">
+        <a href="/login.html" style="color:#F37A7A; font-weight:600; text-decoration:none;">
             Login
         </a>
     </div>
@@ -165,33 +165,33 @@
     }
 
     function handleRegister(event) {
-        event.preventDefault();
+    event.preventDefault();
 
-        const name = document.getElementById("fullName").value.trim();
-        const email = document.getElementById("email").value.trim();
-        const password = document.getElementById("regPassword").value.trim();
-        const error = document.getElementById("formError");
+    const name = document.getElementById("fullName").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("regPassword").value.trim();
+    const error = document.getElementById("formError");
 
-        if (!name || !email || password.length < 6) {
-            error.innerText = "Please fill all fields correctly.";
-            error.style.display = "block";
-            return;
-        }
-
-        fetch("/auth/signup", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, email, password })
-        })
-        .then(res => {
-            if (!res.ok) throw new Error("Registration failed");
-            window.location.href = "/login";
-        })
-        .catch(err => {
-            error.innerText = err.message;
-            error.style.display = "block";
-        });
+    if (!name || !email || password.length < 6) {
+        error.innerText = "Please fill all fields correctly.";
+        error.style.display = "block";
+        return;
     }
+
+    fetch("https://pcos-tracker-9a53.onrender.com/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password })
+    })
+    .then(res => {
+        if (!res.ok) throw new Error("Registration failed");
+        window.location.href = "/login.html";
+    })
+    .catch(err => {
+        error.innerText = err.message;
+        error.style.display = "block";
+    });
+}
 </script>
 
 </body>

@@ -44,7 +44,7 @@
 
         .navbar .container { display:flex; align-items:center; justify-content:space-between; }
 
-        .navbar-brand { display:flex; align-items:center; gap:12px; }
+        .navbar-brand { display:flex; align-items:center; gap:12px; text-decoration: none; }
         .navbar-brand img { width:64px; height:64px; border-radius:12px; object-fit:cover; }
 
         /* MAITRI brand text */
@@ -58,7 +58,7 @@
           align-items:center;
         }
 
-        /* Full colored i’s */
+        /* Full colored i's */
         .i-grad {
             color: #F37A7A !important;
             -webkit-text-fill-color: #F37A7A !important;
@@ -102,6 +102,11 @@
           border:none;
           font-weight:700;
           box-shadow:0 8px 22px rgba(240,79,139,0.18);
+          cursor: pointer;
+          transition: transform 0.2s;
+        }
+        .btn-start:hover {
+          transform: translateY(-2px);
         }
 
         /* ---------------- FEATURES ---------------- */
@@ -149,6 +154,7 @@
           align-items:center;
           color:var(--pink);
           font-size:18px;
+          flex-shrink: 0;
         }
 
         .feature-title { font-weight:700; font-size:1rem; margin-bottom:4px; }
@@ -166,7 +172,16 @@
             padding: 10px 12px; /* spacing between cards */
         }
 
-
+        /* PAGE LOADER */
+        #pageLoader {
+          position:fixed;
+          inset:0;
+          background:rgba(255,255,255,0.85);
+          display:none;
+          align-items:center;
+          justify-content:center;
+          z-index:5000;
+        }
     </style>
 </head>
 
@@ -176,11 +191,10 @@
 <nav class="navbar navbar-expand-lg">
     <div class="container">
         <a class="navbar-brand" href="#home">
-            <img src="./images/pcos_logo.png" alt="Maitri logo"/>
-
+            <img src="images/pcos_logo.png" alt="Maitri logo">
             <span class="brand-name">
-            Ma<span class="i-grad">i</span>tr<span class="i-grad">i</span>
-        </span>
+                Ma<span class="i-grad">i</span>tr<span class="i-grad">i</span>
+            </span>
         </a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
@@ -202,7 +216,7 @@
     <div class="container">
         <h1>Empower Your PCOS Journey, Naturally</h1>
         <p>A simple, organized way to track your cycle, symptoms, diet, and reports — all at one place.</p>
-        <button class="btn-start" onclick="location.href='/register'">Get Started</button>
+        <button class="btn-start" onclick="location.href='register.html'">Get Started</button>
     </div>
 </section>
 
@@ -213,7 +227,7 @@
 
             <!-- LEFT phone image -->
             <div class="col-lg-5 text-center mb-4">
-                <img src="./images/pcos_logo.pngfirebase deploy --only hosting" class="phone-img" alt="app preview">
+                <img src="./images/index_image.png" class="phone-img" alt="app preview">
             </div>
 
             <!-- RIGHT features -->
@@ -246,7 +260,7 @@
                             <div class="feature-icon"><i class="fa-solid fa-utensils"></i></div>
                             <div>
                                 <div class="feature-title">PCOS-Friendly Food Guide</div>
-                                <div class="feature-desc"> Search and explore PCOS-friendly food and to-avoid foods based on common Indian diets.</div>
+                                <div class="feature-desc">Search and explore PCOS-friendly food and to-avoid foods based on common Indian diets.</div>
                             </div>
                         </div>
                     </div>
@@ -267,7 +281,6 @@
     </div>
 </section>
 
-<!-- ABOUT placeholder -->
 <!-- ABOUT -->
 <section id="about" style="
     padding:60px 0;
@@ -278,10 +291,9 @@
             About Maitri 🌸
         </h4>
 
-
         <p style="color:#555; margin-top:16px; line-height:1.7;">
             Maitri was born from a simple but powerful realization — managing PCOS is not just about
-            tracking cycles or symptoms, it’s about understanding one’s body, building consistency,
+            tracking cycles or symptoms, it's about understanding one's body, building consistency,
             and feeling supported throughout the journey.
         </p>
 
@@ -311,7 +323,17 @@
     </div>
 </section>
 
+<!-- PAGE TRANSITION LOADER -->
+<div id="pageLoader">
+    <div style="text-align:center;">
+        <div class="spinner-border text-danger mb-3" role="status"></div>
+        <div style="font-weight:600; color:#444;">
+            Preparing your space… 🌸
+        </div>
+    </div>
+</div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
     function setActive(e){
@@ -325,8 +347,21 @@
         card.classList.add('active');
       });
     });
+
+    // Graceful transition for Get Started
+    document.addEventListener("DOMContentLoaded", () => {
+      const btn = document.querySelector(".btn-start");
+      const loader = document.getElementById("pageLoader");
+
+      if (!btn || !loader) return;
+
+      btn.addEventListener("click", () => {
+        loader.style.display = "flex";
+        btn.disabled = true;
+        btn.textContent = "Loading…";
+      });
+    });
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

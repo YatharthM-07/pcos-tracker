@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    fetch("/auth/login", {
+    fetch("https://pcos-tracker-9a53.onrender.com/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password })
@@ -51,8 +51,8 @@ document.addEventListener("DOMContentLoaded", () => {
         // 🔑 STORE TOKEN FIRST
         localStorage.setItem("token", data.token);
 
-        // 🧭 THEN REDIRECT
-        window.location.href = "/user-dashboard";
+        // 🧭 THEN REDIRECT (STATIC HTML ON FIREBASE)
+        window.location.href = "/user-dashboard.html";
       })
       .catch(err => {
         error.innerText = err.message;

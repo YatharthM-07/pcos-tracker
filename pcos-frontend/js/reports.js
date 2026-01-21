@@ -1,27 +1,33 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-  // ==================================================
-  // CONFIG (temporary until JWT is wired)
-  // ==================================================
-  const USER_ID = 1; // will be replaced by auth/JWT
+  /* ==============================
+     BACKEND CONFIG
+  ============================== */
+  const API = "https://pcos-tracker-9a53.onrender.com";
+  const token = localStorage.getItem("token");
 
-  // ==================================================
-  // STATE
-  // ==================================================
+  if (!token) {
+    window.location.replace("/login.html");
+    return;
+  }
+
+  /* ==============================
+     STATE
+  ============================== */
   let reports = [];
 
-  // ==================================================
-  // ELEMENTS
-  // ==================================================
+  /* ==============================
+     ELEMENTS
+  ============================== */
   const uploadBox = document.getElementById("uploadBox");
   const fileInput = document.getElementById("reportFile");
   const reportsList = document.getElementById("reportsList");
   const progressWrapper = document.getElementById("progressWrapper");
   const progressBar = document.getElementById("uploadProgress");
 
-  // ==================================================
-  // UI HELPERS
-  // ==================================================
+  /* ==============================
+     UI HELPERS
+  ============================== */
   function showToast(message) {
     const toast = document.createElement("div");
     toast.className = "toast-msg";
@@ -40,7 +46,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     reports.forEach(r => {
-      const date = r.uploadDate?.split("T")[0] ?? "";
+      const date = r.uploadDate
+        ? r.uploadDate.split("T")[0]
+        : "";
 
       reportsList.innerHTML += `
         <div class="report-item">
@@ -67,17 +75,26 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ==================================================
-  // BACKEND CALLS
-  // ==================================================
-  function loadReports() {
-    fetch(`/reports/user?userId=${USER_ID}`)
-      .then(res => res.json())
-      .then(data => {
-        reports = data;
-        renderReports();
-      })
-      .catch(() => showToast("❌ Failed to load reports"));
+  /* ==============================
+     BACKEND CALLS
+  ============================== */
+  async function loadReports() {
+    try {
+      const res = await fetch(`${API}/reports/user`, {
+        headers: {
+          Authorization: "Bearer " + token
+        }
+      });
+
+      if (!res.ok) throw new Error("Fetch failed");
+
+      reports = await res.json();
+      renderReports();
+
+    } catch (e) {
+      console.error("Load reports error:", e);
+      showToast("❌ Failed to load reports");
+    }
   }
 
   function uploadFile(file) {
@@ -89,18 +106,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("userId", USER_ID);
 
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/reports/upload");
+    xhr.open("POST", `${API}/reports/upload`);
+    xhr.setRequestHeader("Authorization", "Bearer " + token);
 
     progressWrapper.style.display = "block";
     progressBar.style.width = "0%";
 
-    xhr.upload.onprogress = (e) => {
+    xhr.upload.onprogress = e => {
       if (e.lengthComputable) {
-        const percent = (e.loaded / e.total) * 100;
-        progressBar.style.width = percent + "%";
+        progressBar.style.width =
+          (e.loaded / e.total) * 100 + "%";
       }
     };
 
@@ -123,25 +140,36 @@ document.addEventListener("DOMContentLoaded", () => {
     xhr.send(formData);
   }
 
-  // ==================================================
-  // ACTIONS (exposed globally for inline HTML buttons)
-  // ==================================================
+  /* ==============================
+     ACTIONS (GLOBAL)
+  ============================== */
   window.downloadReport = function (id) {
-    window.location.href = `/reports/download/${id}`;
+    // Use browser download — backend must read JWT from header cookie/session
+    window.open(`${API}/reports/download/${id}`, "_blank");
   };
 
-  window.deleteReport = function (id) {
-    fetch(`/reports/${id}`, { method: "DELETE" })
-      .then(() => {
-        showToast("🗑 Report deleted");
-        loadReports();
-      })
-      .catch(() => showToast("❌ Delete failed"));
+  window.deleteReport = async function (id) {
+    try {
+      const res = await fetch(`${API}/reports/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: "Bearer " + token
+        }
+      });
+
+      if (!res.ok) throw new Error();
+
+      showToast("🗑 Report deleted");
+      loadReports();
+
+    } catch {
+      showToast("❌ Delete failed");
+    }
   };
 
-  // ==================================================
-  // UPLOAD BOX INTERACTIONS
-  // ==================================================
+  /* ==============================
+     UPLOAD INTERACTIONS
+  ============================== */
   uploadBox.addEventListener("click", () => fileInput.click());
 
   uploadBox.addEventListener("dragover", e => {
@@ -156,7 +184,6 @@ document.addEventListener("DOMContentLoaded", () => {
   uploadBox.addEventListener("drop", e => {
     e.preventDefault();
     uploadBox.classList.remove("dragover");
-
     const file = e.dataTransfer.files[0];
     if (file) uploadFile(file);
   });
@@ -167,9 +194,9 @@ document.addEventListener("DOMContentLoaded", () => {
     fileInput.value = "";
   });
 
-  // ==================================================
-  // INIT
-  // ==================================================
+  /* ==============================
+     INIT
+  ============================== */
   loadReports();
 
 });

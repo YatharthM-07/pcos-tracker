@@ -1,11 +1,16 @@
 document.addEventListener("DOMContentLoaded", () => {
 
+ /* ==============================
+     BACKEND CONFIG
+  ============================== */
+  const API = "https://pcos-tracker-9a53.onrender.com";
+
   /* ==============================
      AUTH CHECK
   ============================== */
   const token = localStorage.getItem("token");
   if (!token) {
-    window.location.replace("/login");
+    window.location.replace("/login.html");
     return;
   }
 
@@ -33,9 +38,10 @@ document.addEventListener("DOMContentLoaded", () => {
   ============================== */
   async function loadCyclesFromBackend() {
     try {
-      const res = await fetch("/cycles/my-cycles", {
+      const res = await fetch(`${API}/cycles/my-cycles`, {
         headers: { Authorization: "Bearer " + token }
       });
+      if (!res.ok) throw new Error("Failed to fetch cycles");
       backendCycles = await res.json();
       renderCalendar();
       updateTimeline();
@@ -46,9 +52,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function loadPeriodsFromBackend() {
     try {
-      const res = await fetch("/cycles/my-periods", {
+      const res = await fetch(`${API}/cycles/my-periods`, {
         headers: { Authorization: "Bearer " + token }
       });
+      if (!res.ok) throw new Error("Failed to fetch periods");
       backendPeriods = await res.json();
       requestAnimationFrame(renderCalendar);
     } catch (err) {
@@ -142,14 +149,12 @@ document.addEventListener("DOMContentLoaded", () => {
   function paintPeriods(cells) {
     if (!backendPeriods || backendPeriods.length === 0) return;
 
-    // backend already sends DESC → trust it
     const current = backendPeriods[0];
     const previous = backendPeriods.length > 1 ? backendPeriods[1] : null;
 
     cells.forEach(c => {
       const d = new Date(c.iso);
 
-      // ✅ Latest period (always paint)
       if (
         current &&
         d >= new Date(current.startDate) &&
@@ -158,7 +163,6 @@ document.addEventListener("DOMContentLoaded", () => {
         c.el.classList.add("period-current");
       }
 
-      // ✅ Previous period (light shade)
       if (
         previous &&
         d >= new Date(previous.startDate) &&
@@ -205,7 +209,7 @@ document.addEventListener("DOMContentLoaded", () => {
       savePeriodBtn.innerText = "Saving...";
 
       try {
-        await fetch("/cycles", {
+        await fetch(`${API}/cycles`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -214,7 +218,7 @@ document.addEventListener("DOMContentLoaded", () => {
           body: JSON.stringify({ startDate: startSel, endDate: endSel })
         });
 
-        await fetch("/cycles/period", {
+        await fetch(`${API}/cycles/period`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -249,7 +253,6 @@ document.addEventListener("DOMContentLoaded", () => {
      DASHBOARD CARDS & INSIGHTS
   ============================== */
   function renderDashboardCards(data) {
-
     const cycleLen = document.getElementById("cycle-length");
     const prevLen = document.getElementById("prev-length");
     const nextIn = document.getElementById("next-in");
@@ -303,9 +306,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function refreshAnalytics() {
-    const res = await fetch("/analytics/dashboard", {
+    const res = await fetch(`${API}/analytics/dashboard`, {
       headers: { Authorization: "Bearer " + token }
     });
+    if (!res.ok) return;
     const data = await res.json();
     renderDashboardCards(data);
   }

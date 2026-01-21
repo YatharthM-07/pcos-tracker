@@ -33,7 +33,7 @@ function generateDashboardAI() {
 
   output.innerHTML = "Maitri is thinking… ✨";
 
-  fetch("/dashboard/ai-summary", {
+  fetch("https://pcos-tracker-9a53.onrender.com/dashboard/ai-summary", {
     method: "GET",
     headers: {
       "Authorization": "Bearer " + token
@@ -41,7 +41,7 @@ function generateDashboardAI() {
   })
     .then(res => {
       if (!res.ok) throw new Error("AI request failed");
-      return res.json(); // ✅ IMPORTANT
+      return res.json();
     })
     .then(data => {
       output.innerHTML = `
@@ -66,19 +66,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (fab) {
     fab.addEventListener("click", () => {
-      console.log("Dashboard AI FAB clicked");
       toggleDashboardAI();
     });
-  } else {
-    console.warn("dashboardAIFab not found");
   }
 
   if (generateBtn) {
     generateBtn.addEventListener("click", () => {
-      console.log("Generate Dashboard AI clicked");
       generateDashboardAI();
     });
-  } else {
-    console.warn("generateDashboardAI button not found");
   }
 });

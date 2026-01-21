@@ -1,10 +1,18 @@
 // symptom-view.js
-// Purpose: View-only Symptom Page + Insights (no data entry)
+// Purpose: View-only Symptom Page + Insights (FIXED)
+
+const API = "https://pcos-tracker-9a53.onrender.com";
 
 document.addEventListener("DOMContentLoaded", () => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    window.location.replace("/login.html");
+    return;
+  }
+
   enableViewOnlyMode();
-  renderSymptomFrequencyChart();
-  renderSymptomTrendChart();
+  renderSymptomFrequencyChart(token);
+  renderSymptomTrendChart(token);
 });
 
 /* ==============================
@@ -12,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
 ============================== */
 function enableViewOnlyMode() {
   document.querySelectorAll("input, textarea").forEach(el => {
-    el.setAttribute("disabled", true);
+    el.disabled = true;
   });
 
   document.querySelectorAll(".symptom-item").forEach(item => {
@@ -32,7 +40,6 @@ function injectInfoNote() {
 
   const note = document.createElement("div");
   note.className = "alert alert-light border rounded-3 mb-4";
-  note.style.fontSize = "0.9rem";
   note.innerHTML = `
     <strong>Note:</strong>
     Symptoms are logged using the <b>Daily Log</b> on the dashboard.
@@ -42,192 +49,133 @@ function injectInfoNote() {
 }
 
 /* ==============================
-   FREQUENCY CHART (BAR)
+   FREQUENCY CHART
 ============================== */
-function renderSymptomFrequencyChart() {
-  fetch("/symptoms/frequency", {
+function renderSymptomFrequencyChart(token) {
+  fetch(`${API}/symptoms/frequency`, {  // ← CHANGED FROM /analytics/symptoms/frequency
     headers: {
-      "Authorization": `Bearer ${localStorage.getItem("token")}`
+      Authorization: `Bearer ${token}`
     }
   })
-  .then(res => res.json())
-  .then(scoreMap => {
-
-    // 🟡 Empty-data guard
-    if (!scoreMap || Object.keys(scoreMap).length === 0) {
-      const insight = document.getElementById("symptomInsightText");
-      if (insight) {
-        insight.textContent =
-          "Start logging symptoms to see insights here.";
+    .then(res => {
+      if (!res.ok) throw new Error("Frequency API failed");
+      return res.json();
+    })
+    .then(scoreMap => {
+      if (!scoreMap || !Object.keys(scoreMap).length) {
+        setInsight("Start logging symptoms to see insights here.");
+        return;
       }
-      return;
-    }
 
-    const canvas = document.getElementById("symptomFrequencyChart");
-    if (!canvas || typeof Chart === "undefined") return;
+      const canvas = document.getElementById("symptomFrequencyChart");
+      if (!canvas || typeof Chart === "undefined") return;
 
-    // 🛑 Prevent duplicate rendering
-    if (canvas.chart) {
-      canvas.chart.destroy();
-    }
+      if (canvas.chart) canvas.chart.destroy();
 
-    const ctx = canvas.getContext("2d");
+      const ctx = canvas.getContext("2d");
+      const gradient = ctx.createLinearGradient(0, 0, 0, 320);
+      gradient.addColorStop(0, "#F37A7A");
+      gradient.addColorStop(1, "#FAD0D0");
 
-    // 🎨 Gradient for bars
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    gradient.addColorStop(0, "#F37A7A");
-    gradient.addColorStop(1, "#FAD0D0");
-
-    canvas.chart = new Chart(ctx, {
-      type: "bar",
-      data: {
-        labels: Object.keys(scoreMap),
-        datasets: [{
-          data: Object.values(scoreMap),
-          backgroundColor: gradient,
-          borderRadius: 14,
-          barThickness: 36,
-          hoverBackgroundColor: "#EE6B6B"
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: "#fff",
-            titleColor: "#333",
-            bodyColor: "#555",
-            borderColor: "#F37A7A",
-            borderWidth: 1
-          }
+      canvas.chart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: Object.keys(scoreMap),
+          datasets: [{
+            data: Object.values(scoreMap),
+            backgroundColor: gradient,
+            borderRadius: 14,
+            barThickness: 36
+          }]
         },
-        scales: {
-          x: {
-            grid: { display: false },
-            ticks: { font: { size: 13, weight: "600" } }
-          },
-          y: {
-            beginAtZero: true,
-            ticks: { stepSize: 2 },
-            grid: {
-              color: "rgba(0,0,0,0.06)",
-              drawBorder: false
-            }
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 2 } }
           }
         }
-      }
-    });
+      });
 
-    updateInsightText(scoreMap);
-    highlightTopSymptoms(scoreMap);
-
-  })
-  .catch(err => console.error("Frequency chart error:", err));
+      updateInsightText(scoreMap);
+      highlightTopSymptoms(scoreMap);
+    })
+    .catch(() => setInsight("Unable to load symptom insights."));
 }
 
 /* ==============================
-   TREND CHART (LINE)
+   TREND CHART
 ============================== */
-function renderSymptomTrendChart() {
-  fetch("/symptoms/trend?days=7", {
+function renderSymptomTrendChart(token) {
+  fetch(`${API}/symptoms/trend?days=7`, {  // ← CHANGED FROM /analytics/symptoms/trend
     headers: {
-      "Authorization": `Bearer ${localStorage.getItem("token")}`
+      Authorization: `Bearer ${token}`
     }
   })
-  .then(res => res.json())
-  .then(data => {
-    const labels = data.map(d => d.date);
-    const values = data.map(d => d.fatigue);
+    .then(res => {
+      if (!res.ok) throw new Error("Trend API failed");
+      return res.json();
+    })
+    .then(data => {
+      if (!Array.isArray(data) || !data.length) return;
 
-    const canvas = document.getElementById("symptomTrendChart");
-    if (!canvas || typeof Chart === "undefined") return;
+      const labels = data.map(d => d.date);
+      const values = data.map(d => d.fatigue ?? 0);
 
-    // 🛑 Prevent duplicate rendering
-    if (canvas.chart) {
-      canvas.chart.destroy();
-    }
+      const canvas = document.getElementById("symptomTrendChart");
+      if (!canvas || typeof Chart === "undefined") return;
 
-    const ctx = canvas.getContext("2d");
+      if (canvas.chart) canvas.chart.destroy();
 
-    // 🎨 Gradient under line
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    gradient.addColorStop(0, "rgba(243,122,122,0.35)");
-    gradient.addColorStop(1, "rgba(243,122,122,0.05)");
+      const ctx = canvas.getContext("2d");
+      const gradient = ctx.createLinearGradient(0, 0, 0, 320);
+      gradient.addColorStop(0, "rgba(243,122,122,0.35)");
+      gradient.addColorStop(1, "rgba(243,122,122,0.05)");
 
-    canvas.chart = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels,
-        datasets: [{
-          data: values,
-          borderColor: "#F37A7A",
-          backgroundColor: gradient,
-          borderWidth: 4,
-          pointRadius: 6,
-          pointHoverRadius: 8,
-          pointBackgroundColor: "#F37A7A",
-          pointBorderColor: "#fff",
-          pointBorderWidth: 2,
-          fill: true,
-          tension: 0.45
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: "#fff",
-            titleColor: "#333",
-            bodyColor: "#555",
+      canvas.chart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [{
+            data: values,
             borderColor: "#F37A7A",
-            borderWidth: 1
-          }
+            backgroundColor: gradient,
+            fill: true,
+            tension: 0.45
+          }]
         },
-        scales: {
-          x: {
-            grid: { display: false },
-            ticks: { font: { size: 12 } }
-          },
-          y: {
-            min: 0,
-            max: 10,
-            ticks: { stepSize: 2 },
-            grid: {
-              color: "rgba(0,0,0,0.06)",
-              drawBorder: false
-            }
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { min: 0, max: 10, ticks: { stepSize: 2 } }
           }
         }
-      }
-    });
-  })
-  .catch(err => console.error("Trend chart error:", err));
+      });
+    })
+    .catch(() => {});
 }
 
 /* ==============================
-   INSIGHT TEXT
+   INSIGHTS
 ============================== */
 function updateInsightText(data) {
-  if (!data || !Object.keys(data).length) return;
-
-  const [topSymptom] = Object.entries(data)
-    .sort((a, b) => b[1] - a[1])[0];
-
-  const insightEl = document.getElementById("symptomInsightText");
-  if (insightEl) {
-    insightEl.textContent =
-      `${topSymptom} appears most frequently in your recent symptom logs.`;
-  }
+  const [top] = Object.entries(data).sort((a, b) => b[1] - a[1])[0];
+  setInsight(`${top} appears most frequently in your recent logs.`);
 }
+
+function setInsight(text) {
+  const el = document.getElementById("symptomInsightText");
+  if (el) el.textContent = text;
+}
+
 function highlightTopSymptoms(scoreMap) {
   const top = Object.entries(scoreMap)
-    .sort((a,b) => b[1] - a[1])
-    .slice(0,2)
-    .map(([name]) => name);
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 2)
+    .map(([k]) => k);
 
   document.querySelectorAll(".symptom-item").forEach(item => {
     if (top.includes(item.dataset.name)) {
@@ -235,18 +183,3 @@ function highlightTopSymptoms(scoreMap) {
     }
   });
 }
-function highlightTopSymptoms(scoreMap) {
-  const topSymptoms = Object.entries(scoreMap)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 2)           // highlight top 2
-    .map(([name]) => name);
-
-  document.querySelectorAll(".symptom-item").forEach(item => {
-    const name = item.dataset.name;
-    if (topSymptoms.includes(name)) {
-      item.classList.add("highlight");
-    }
-  });
-}
-
-
