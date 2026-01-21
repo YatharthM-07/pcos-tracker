@@ -35,23 +35,21 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-                // ✅ ENABLE CORS
                 .cors(cors -> {})
-
-                // ❌ CSRF disabled (JWT-based)
                 .csrf(csrf -> csrf.disable())
-
-                // 🔒 Stateless session
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
                 .authorizeHttpRequests(auth -> auth
 
+                        // ✅ ALWAYS allow preflight
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+
                         // 🔓 AUTH APIs
                         .requestMatchers("/auth/**").permitAll()
 
-                        // 🔓 TEMP PUBLIC (if needed)
+                        // 🔓 TEMP PUBLIC
                         .requestMatchers("/food/**").permitAll()
 
                         // 🔒 PROTECTED APIs
