@@ -15,10 +15,10 @@ public class CorsConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         // ✅ Allow Firebase hosting variants
-        config.setAllowedOriginPatterns(List.of(
-                "https://*.web.app",
-                "https://*.firebaseapp.com"
+        config.setAllowedOrigins(List.of(
+                 "https://maitri-pcos-tracker-82f0e.web.app"
         ));
+
 
         config.setAllowedMethods(List.of(
                 "GET", "POST", "PUT", "DELETE", "OPTIONS"
